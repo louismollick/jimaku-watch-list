@@ -7,7 +7,7 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react"
-import { startTransition, useDeferredValue, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -148,7 +148,7 @@ function ResultCard({
           type="button"
         >
           <div className="space-y-3 transition duration-200 group-hover:-translate-y-1">
-            <div className="aspect-[3/4] overflow-hidden rounded-md bg-slate-950 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
+            <div className="aspect-[3/4] overflow-hidden rounded bg-slate-950 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
               <img
                 alt={
                   result.anilistEntry.media.title.romaji ??
@@ -162,7 +162,7 @@ function ResultCard({
               <div className="flex items-start gap-2.5">
                 <StatusDot result={result} />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <h3 className="line-clamp-2 h-10 text-sm font-semibold leading-5 text-slate-200">
+                  <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-slate-400">
                     {result.anilistEntry.media.title.romaji ??
                       result.matchedJimaku.name}
                   </h3>
@@ -421,21 +421,20 @@ export function AnimeOverlapPage({
   const [selectedResult, setSelectedResult] = useState<OverlapResult | null>(
     null
   )
-  const deferredLookupState = useDeferredValue(lookupState)
-  const hasResultsState = deferredLookupState?.ok === true
-  const availableGenres = deferredLookupState?.ok
+  const hasResultsState = lookupState?.ok === true
+  const availableGenres = lookupState?.ok
     ? [
         ...new Set(
-          deferredLookupState.results.flatMap(
+          lookupState.results.flatMap(
             (result) => result.anilistEntry.media.genres
           )
         ),
       ].sort((left, right) => left.localeCompare(right))
     : []
 
-  const visibleResults = deferredLookupState?.ok
+  const visibleResults = lookupState?.ok
     ? sortResults(
-        deferredLookupState.results.filter((result) => {
+        lookupState.results.filter((result) => {
           if (!selectedStatuses.has(result.anilistEntry.status)) {
             return false
           }
@@ -481,28 +480,26 @@ export function AnimeOverlapPage({
 
     setIsPending(true)
 
-    startTransition(async () => {
-      try {
-        setLookupState(await lookupFn({ data: { username: nextUsername } }))
-      } finally {
-        setIsPending(false)
-      }
-    })
+    try {
+      setLookupState(await lookupFn({ data: { username: nextUsername } }))
+    } finally {
+      setIsPending(false)
+    }
   }
 
   return (
     <TooltipProvider>
-      <main className="min-h-svh bg-[linear-gradient(180deg,_#08111d_0%,_#0b1622_30%,_#0b1622_100%)] text-slate-100">
+      <main className="min-h-svh bg-[linear-gradient(180deg,_#08111d_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-slate-100">
         <section
           className={cn(
-            "mx-auto flex w-full max-w-[1520px] flex-col px-4 sm:px-6 lg:px-8",
-            hasResultsState ? "gap-8 py-8" : "min-h-svh justify-center py-12"
+            "mx-auto flex min-h-svh w-full max-w-[1520px] flex-col px-4 py-8 sm:px-6 lg:px-8",
+            hasResultsState ? "gap-8" : ""
           )}
         >
           <div
             className={cn(
-              "space-y-5 text-center",
-              hasResultsState ? "" : "pb-[18vh]"
+              "space-y-5 text-center transition-transform duration-500 ease-out",
+              hasResultsState ? "translate-y-0" : "translate-y-[38vh]"
             )}
           >
             <h1 className="text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl">
@@ -515,14 +512,14 @@ export function AnimeOverlapPage({
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                 <Input
-                  className="h-12 rounded-md border-slate-800 bg-slate-900 pl-11 text-base text-slate-100 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.9)] placeholder:text-slate-500"
+                  className="h-12 rounded border-slate-800 bg-slate-900 pl-11 text-base text-slate-100 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.9)] placeholder:text-slate-500"
                   onChange={(event) => setUsername(event.target.value)}
                   placeholder="Enter AniList username"
                   value={username}
                 />
               </div>
               <Button
-                className="h-12 rounded-md bg-sky-500 px-6 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+                className="h-12 rounded bg-sky-500 px-6 text-sm font-semibold text-slate-950 hover:bg-sky-400"
                 disabled={isPending}
                 type="submit"
               >
@@ -557,39 +554,38 @@ export function AnimeOverlapPage({
           </div>
 
           {hasResultsState ? (
-            <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
-              <aside className="h-fit space-y-8 pt-1">
-                <div className="space-y-4">
-                  <p className="text-[18px] font-medium tracking-[0.01em] text-slate-400">
-                    Filters
-                  </p>
-                  <div className="space-y-4">
-                    <Label className="text-[14px] uppercase tracking-[0.28em] text-slate-500">
-                      Watch status
-                    </Label>
-                    <MultiSelectCombobox
-                      ariaLabel="Watch status"
-                      onSelectedValuesChange={(nextSelectedValues) =>
-                        setSelectedStatuses(
-                          nextSelectedValues as Set<
-                            (typeof anilistWatchStatuses)[number]
-                          >
-                        )
-                      }
-                      options={anilistWatchStatuses.map((status) => ({
-                        label: statusLabel[status],
-                        value: status,
-                      }))}
-                      placeholder="Any"
-                      placeholderWhenAllSelected
-                      searchPlaceholder="Search watch status..."
-                      selectedValues={selectedStatuses}
-                    />
-                  </div>
+            <div className="grid gap-6 animate-in fade-in fill-mode-both duration-500 ease-out lg:grid-cols-[260px_minmax(0,1fr)]">
+              <aside className="h-fit space-y-6 pt-1">
+                <p className="text-[15px] font-semibold text-slate-200">
+                  Filters
+                </p>
+
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
+                    Watch status
+                  </Label>
+                  <MultiSelectCombobox
+                    ariaLabel="Watch status"
+                    onSelectedValuesChange={(nextSelectedValues) =>
+                      setSelectedStatuses(
+                        nextSelectedValues as Set<
+                          (typeof anilistWatchStatuses)[number]
+                        >
+                      )
+                    }
+                    options={anilistWatchStatuses.map((status) => ({
+                      label: statusLabel[status],
+                      value: status,
+                    }))}
+                    placeholder="Any"
+                    placeholderWhenAllSelected
+                    searchPlaceholder="Search watch status..."
+                    selectedValues={selectedStatuses}
+                  />
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-[14px] uppercase tracking-[0.28em] text-slate-500">
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
                     Airing status
                   </Label>
                   <MultiSelectCombobox
@@ -613,8 +609,8 @@ export function AnimeOverlapPage({
                 </div>
 
                 {availableGenres.length > 0 ? (
-                  <div className="space-y-4">
-                    <Label className="text-[14px] uppercase tracking-[0.28em] text-slate-500">
+                  <div className="space-y-2">
+                    <Label className="text-[13px] font-medium text-slate-400">
                       Genres
                     </Label>
                     <MultiSelectCombobox
@@ -631,11 +627,11 @@ export function AnimeOverlapPage({
                   </div>
                 ) : null}
 
-                <div className="space-y-4">
-                  <Label className="text-[14px] uppercase tracking-[0.28em] text-slate-500">
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
                     Completeness
                   </Label>
-                  <div className="flex items-center gap-3.5 text-lg text-slate-300">
+                  <div className="flex items-center gap-3 text-sm text-slate-300">
                     <Checkbox
                       checked={hideIncomplete}
                       id="hide-incomplete"
@@ -644,7 +640,7 @@ export function AnimeOverlapPage({
                       }
                     />
                     <Label
-                      className="text-lg font-normal text-slate-300"
+                      className="text-sm font-normal text-slate-300"
                       htmlFor="hide-incomplete"
                     >
                       Hide incomplete
@@ -652,8 +648,8 @@ export function AnimeOverlapPage({
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <Label className="text-[14px] uppercase tracking-[0.28em] text-slate-500">
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
                     Sort by
                   </Label>
                   <Select
@@ -662,14 +658,17 @@ export function AnimeOverlapPage({
                   >
                     <SelectTrigger
                       aria-label="Sort by"
-                      className="h-16 rounded-md border-0 bg-slate-900 px-5 text-left text-[18px] text-slate-200 shadow-none"
+                      className="w-full justify-between rounded border-0 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-400 shadow-none hover:bg-slate-800 data-[size=default]:h-10 [&>svg]:text-slate-400 [&>svg]:opacity-90"
                     >
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-md border-slate-800 bg-slate-950 text-slate-100">
+                    <SelectContent
+                      className="w-[var(--radix-select-trigger-width)] overflow-hidden rounded border-slate-800 bg-slate-950 p-0 text-slate-400"
+                      position="popper"
+                    >
                       {sortOptions.map((option) => (
                         <SelectItem
-                          className="text-[17px]"
+                          className="rounded-none py-2 text-[15px] text-slate-400 focus:bg-slate-800 focus:text-slate-100 hover:text-slate-100"
                           key={option}
                           value={option}
                         >
@@ -686,7 +685,7 @@ export function AnimeOverlapPage({
               </aside>
 
               <section className="space-y-4">
-                {deferredLookupState?.ok ? (
+                {lookupState?.ok ? (
                   <div className="text-sm text-slate-400">
                     Showing {visibleResults.length} results
                   </div>

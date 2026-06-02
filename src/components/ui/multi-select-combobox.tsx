@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronsUpDown } from "lucide-react"
+import { Check, ChevronDown } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -73,7 +73,7 @@ export function MultiSelectCombobox({
         <Button
           aria-label={ariaLabel}
           aria-expanded={open}
-          className="h-16 w-full justify-between rounded-md border-0 bg-slate-900 px-5 text-left text-[18px] font-normal text-slate-200 shadow-none hover:bg-slate-900"
+          className="h-10 w-full justify-between rounded border-0 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-400 shadow-none hover:bg-slate-800 aria-expanded:bg-slate-800/60 aria-expanded:text-slate-400"
           role="combobox"
           variant="outline"
         >
@@ -89,13 +89,13 @@ export function MultiSelectCombobox({
           >
             {triggerLabel}
           </span>
-          <ChevronsUpDown className="size-4 shrink-0 text-slate-500" />
+          <ChevronDown className="size-4 shrink-0 text-slate-400 opacity-90" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded p-0">
         <div className="border-b border-slate-800 p-3">
           <Input
-            className="border-slate-800 bg-slate-900 text-sm text-slate-100 placeholder:text-slate-500"
+            className="rounded border-slate-800 bg-slate-900 text-sm text-slate-100 placeholder:text-slate-500"
             onChange={(event) => setQuery(event.target.value)}
             placeholder={searchPlaceholder}
             value={query}
@@ -108,7 +108,7 @@ export function MultiSelectCombobox({
 
               return (
                 <button
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm text-slate-100 hover:bg-slate-900"
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-2 text-left text-sm text-slate-400 hover:bg-slate-800"
                   key={option.value}
                   onClick={() => {
                     const nextSelectedValues = new Set(selectedValues)
