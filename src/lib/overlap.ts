@@ -1,12 +1,29 @@
 import { fetchAniListEntries } from "@/lib/anilist"
+import {
+  getLearnNativelyJlptEquivalent,
+  getLearnNativelyLevelNumber,
+  loadJpdbAnimeDifficultySnapshot,
+  loadLearnNativelyAnimationLevelsSnapshot,
+} from "@/lib/anime-difficulty"
 import { loadJimakuSnapshot } from "@/lib/jimaku"
-import { matchAnime } from "@/lib/matching"
+import {
+  matchAnime,
+  matchJpdbAnimeDifficulty,
+  matchLearnNativelyAnimationLevel,
+} from "@/lib/matching"
 import {
   readCachedLookupResponse,
   writeCachedLookupResponse,
 } from "@/lib/runtime-cache"
 import { statusOrder } from "@/lib/status"
-import type { AniListEntry, LookupResponse, OverlapResult } from "@/lib/types"
+import type {
+  AniListEntry,
+  JimakuEntry,
+  JpdbAnimeDifficultyEntry,
+  LearnNativelyAnimationLevelEntry,
+  LookupResponse,
+  OverlapResult,
+} from "@/lib/types"
 
 export function getCompleteness(entry: AniListEntry, fileCount: number) {
   if (
@@ -37,6 +54,63 @@ export function sortResults(results: OverlapResult[]) {
   })
 }
 
+export function buildOverlapResults(
+  aniListEntries: AniListEntry[],
+  jimakuEntries: JimakuEntry[],
+  jpdbEntries: JpdbAnimeDifficultyEntry[],
+  learnNativelyEntries: LearnNativelyAnimationLevelEntry[]
+) {
+  const results: OverlapResult[] = []
+
+  for (const anilistEntry of aniListEntries) {
+    const matched = matchAnime(anilistEntry, jimakuEntries)
+
+    if (!matched) {
+      continue
+    }
+
+    const matchedJpdb = matchJpdbAnimeDifficulty(anilistEntry, jpdbEntries)
+    const matchedLearnNativelyBase = matchLearnNativelyAnimationLevel(
+      anilistEntry,
+      learnNativelyEntries
+    )
+    const learnNativelyJlptEquivalent = matchedLearnNativelyBase
+      ? getLearnNativelyJlptEquivalent(matchedLearnNativelyBase.entry.level)
+      : null
+    const learnNativelyLevelNumber = matchedLearnNativelyBase
+      ? getLearnNativelyLevelNumber(matchedLearnNativelyBase.entry.level)
+      : null
+    const matchedLearnNatively =
+      matchedLearnNativelyBase &&
+      learnNativelyJlptEquivalent &&
+      learnNativelyLevelNumber !== null
+        ? {
+            ...matchedLearnNativelyBase,
+            jlptEquivalent: learnNativelyJlptEquivalent,
+            levelNumber: learnNativelyLevelNumber,
+          }
+        : undefined
+
+    results.push({
+      anilistEntry,
+      matchedJimaku: matched.matchedJimaku,
+      alternates: matched.alternates,
+      matchScore: matched.matchScore,
+      matchReason: matched.matchReason,
+      isAmbiguous: matched.isAmbiguous,
+      isLowConfidence: matched.isLowConfidence,
+      completeness: getCompleteness(
+        anilistEntry,
+        matched.matchedJimaku.fileCount
+      ),
+      matchedJpdb: matchedJpdb ?? undefined,
+      matchedLearnNatively,
+    })
+  }
+
+  return results
+}
+
 export async function findOverlap(username: string): Promise<LookupResponse> {
   const trimmedUsername = username.trim()
   const fetchedAt = new Date().toISOString()
@@ -55,39 +129,25 @@ export async function findOverlap(username: string): Promise<LookupResponse> {
     return cachedResponse
   }
 
-  const [aniListResult, jimakuEntries] = await Promise.all([
-    fetchAniListEntries(trimmedUsername),
-    loadJimakuSnapshot(),
-  ])
+  const [aniListResult, jimakuEntries, jpdbEntries, learnNativelyEntries] =
+    await Promise.all([
+      fetchAniListEntries(trimmedUsername),
+      loadJimakuSnapshot(),
+      loadJpdbAnimeDifficultySnapshot(),
+      loadLearnNativelyAnimationLevelsSnapshot(),
+    ])
 
   if (!Array.isArray(aniListResult)) {
     await writeCachedLookupResponse(trimmedUsername, aniListResult)
     return aniListResult
   }
 
-  const results = aniListResult
-    .map((anilistEntry) => {
-      const matched = matchAnime(anilistEntry, jimakuEntries)
-
-      if (!matched) {
-        return null
-      }
-
-      return {
-        anilistEntry,
-        matchedJimaku: matched.matchedJimaku,
-        alternates: matched.alternates,
-        matchScore: matched.matchScore,
-        matchReason: matched.matchReason,
-        isAmbiguous: matched.isAmbiguous,
-        isLowConfidence: matched.isLowConfidence,
-        completeness: getCompleteness(
-          anilistEntry,
-          matched.matchedJimaku.fileCount
-        ),
-      } satisfies OverlapResult
-    })
-    .filter((result): result is OverlapResult => result !== null)
+  const results = buildOverlapResults(
+    aniListResult,
+    jimakuEntries,
+    jpdbEntries,
+    learnNativelyEntries
+  )
 
   const response = {
     ok: true,

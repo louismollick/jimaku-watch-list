@@ -8,7 +8,9 @@ import {
   Sparkles,
   TriangleAlert,
 } from "lucide-react"
+import type { FormEvent, ReactNode } from "react"
 import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -27,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
 import {
   Tooltip,
   TooltipContent,
@@ -44,7 +47,11 @@ import {
   type AniListMediaStatus,
   anilistMediaStatuses,
   anilistWatchStatuses,
+  type DifficultyFilterMode,
+  difficultyFilterModes,
+  type LearnNativelyJlptEquivalent,
   type LookupResponse,
+  learnNativelyJlptEquivalents,
   type OverlapResult,
   type SortOption,
   sortOptions,
@@ -56,6 +63,8 @@ type AnimeOverlapPageProps = {
   lookup: (input: { data: { username: string } }) => Promise<LookupResponse>
 }
 
+type NumericRange = [number, number]
+
 const relativeTimeFormatter = new Intl.RelativeTimeFormat(undefined, {
   numeric: "auto",
 })
@@ -64,6 +73,25 @@ const absoluteTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 })
+
+const difficultyFilterModeLabels: Record<DifficultyFilterMode, string> = {
+  none: "No difficulty filter",
+  jpdbAverageDifficulty: "JPDB Average Difficulty",
+  learnNativelyLevel: "LearnNatively Level",
+  learnNativelyJlptEquivalent: "LearnNatively JLPT Equivalent",
+}
+
+const learnNativelyJlptDescriptions: Record<
+  LearnNativelyJlptEquivalent,
+  string
+> = {
+  "N1+": "~JLPT N1+",
+  N1: "~JLPT N1",
+  N2: "~JLPT N2",
+  N3: "~JLPT N3",
+  N4: "~JLPT N4",
+  N5: "~JLPT N5",
+}
 
 function formatRelativeFetchedAt(value: string, now: number) {
   const fetchedAt = new Date(value).getTime()
@@ -108,6 +136,63 @@ function formatAbsoluteFetchedAt(value: string) {
   }
 
   return `Fetched ${absoluteTimeFormatter.format(fetchedAt)}.`
+}
+
+function getNumericBounds(values: number[]) {
+  if (values.length === 0) {
+    return null
+  }
+
+  return [Math.min(...values), Math.max(...values)] as NumericRange
+}
+
+function normalizeRange(
+  range: NumericRange | null,
+  bounds: NumericRange | null
+): NumericRange | null {
+  if (!bounds) {
+    return null
+  }
+
+  if (!range) {
+    return bounds
+  }
+
+  const lowerBound = Math.max(bounds[0], Math.min(range[0], bounds[1]))
+  const upperBound = Math.min(bounds[1], Math.max(range[1], bounds[0]))
+
+  return [
+    Math.min(lowerBound, upperBound),
+    Math.max(lowerBound, upperBound),
+  ] as NumericRange
+}
+
+function getLearnNativelyJlptEquivalentIndex(
+  equivalent: LearnNativelyJlptEquivalent
+) {
+  return learnNativelyJlptEquivalents.indexOf(equivalent)
+}
+
+function formatDifficultyRangeValue(mode: DifficultyFilterMode, value: number) {
+  if (mode === "jpdbAverageDifficulty") {
+    return `${value}/100`
+  }
+
+  if (mode === "learnNativelyLevel") {
+    return `L${value}`
+  }
+
+  if (mode === "learnNativelyJlptEquivalent") {
+    return (
+      learnNativelyJlptEquivalents[value] ?? learnNativelyJlptEquivalents[0]
+    )
+  }
+
+  return String(value)
+}
+
+function getMediaStatusLabel(status: AniListMediaStatus) {
+  return status ? mediaStatusLabel[status] : "Unknown"
 }
 
 function LookupFreshness({ fetchedAt }: { fetchedAt: string }) {
@@ -218,8 +303,67 @@ function WarningDot({ label, tone }: { label: string; tone: "amber" | "red" }) {
   )
 }
 
-function getMediaStatusLabel(status: AniListMediaStatus) {
-  return status ? mediaStatusLabel[status] : "Unknown"
+function JpdbLogo({ className }: { className?: string }) {
+  return (
+    <img
+      alt=""
+      aria-hidden="true"
+      className={className}
+      src="/jpdb-favicon-32x32.png"
+    />
+  )
+}
+
+function LearnNativelyLogo({ className }: { className?: string }) {
+  return (
+    <img
+      alt=""
+      aria-hidden="true"
+      className={className}
+      src="/learnnatively-favicon-32x32.png"
+    />
+  )
+}
+
+function DifficultyPosterBadge({ children }: { children: ReactNode }) {
+  return (
+    <Badge
+      className="h-auto min-w-[108px] rounded-l-none rounded-r-md border border-slate-700/80 bg-slate-950/92 px-2.5 py-2 text-[11px] font-semibold text-slate-100 shadow-[0_12px_24px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm"
+      variant="outline"
+    >
+      {children}
+    </Badge>
+  )
+}
+
+function DifficultyBadges({ result }: { result: OverlapResult }) {
+  if (!result.matchedJpdb && !result.matchedLearnNatively) {
+    return null
+  }
+
+  return (
+    <div className="absolute bottom-2 left-0">
+      <DifficultyPosterBadge>
+        <div className="flex flex-col items-start gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
+            Difficulty
+          </span>
+          {result.matchedJpdb ? (
+            <div className="flex items-center gap-1.5">
+              <JpdbLogo className="size-3.5" />
+              <span>{result.matchedJpdb.entry.averageDifficulty}/100</span>
+            </div>
+          ) : null}
+          {result.matchedLearnNatively ? (
+            <div className="flex items-center gap-1.5">
+              <LearnNativelyLogo className="size-3.5" />
+              <span>{result.matchedLearnNatively.jlptEquivalent}</span>
+            </div>
+          ) : null}
+        </div>
+      </DifficultyPosterBadge>
+    </div>
+  )
 }
 
 function ResultCard({
@@ -238,7 +382,7 @@ function ResultCard({
           type="button"
         >
           <div className="space-y-3 transition duration-200 group-hover:-translate-y-1">
-            <div className="aspect-[3/4] overflow-hidden rounded bg-slate-950 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
+            <div className="relative aspect-[3/4] overflow-hidden rounded bg-slate-950 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
               <img
                 alt={
                   result.anilistEntry.media.title.romaji ??
@@ -247,6 +391,7 @@ function ResultCard({
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
                 src={result.anilistEntry.media.coverImage.large}
               />
+              <DifficultyBadges result={result} />
             </div>
             <div className="space-y-3 px-0.5">
               <div className="flex items-start gap-2.5">
@@ -298,6 +443,31 @@ function ResultCard({
               </p>
             </div>
           </div>
+          {result.matchedJpdb || result.matchedLearnNatively ? (
+            <div className="grid gap-2 text-slate-200">
+              {result.matchedJpdb ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    JPDB
+                  </span>
+                  <span className="font-medium">
+                    {result.matchedJpdb.entry.averageDifficulty}/100
+                  </span>
+                </div>
+              ) : null}
+              {result.matchedLearnNatively ? (
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
+                    LearnNatively
+                  </span>
+                  <span className="font-medium">
+                    {result.matchedLearnNatively.entry.level} •{" "}
+                    {result.matchedLearnNatively.jlptEquivalent}
+                  </span>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
               Airing Status
@@ -342,7 +512,7 @@ function ResultDialog({
 }) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.85)] sm:max-w-2xl">
+      <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.85)] sm:max-w-3xl">
         {result ? (
           <>
             <DialogHeader>
@@ -352,14 +522,16 @@ function ResultDialog({
               </DialogTitle>
             </DialogHeader>
             <div className="grid gap-6 md:grid-cols-[180px_minmax(0,1fr)]">
-              <img
-                alt={
-                  result.anilistEntry.media.title.romaji ??
-                  result.matchedJimaku.name
-                }
-                className="aspect-[3/4] w-full rounded-2xl object-cover shadow-lg"
-                src={result.anilistEntry.media.coverImage.large}
-              />
+              <div>
+                <img
+                  alt={
+                    result.anilistEntry.media.title.romaji ??
+                    result.matchedJimaku.name
+                  }
+                  className="aspect-[3/4] w-full rounded-2xl object-cover shadow-lg"
+                  src={result.anilistEntry.media.coverImage.large}
+                />
+              </div>
               <div className="space-y-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1 text-sm text-slate-200">
@@ -444,6 +616,143 @@ function ResultDialog({
                     </p>
                   </div>
                 </div>
+                {result.matchedJpdb ? (
+                  <div className="grid gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                          JPDB
+                        </p>
+                        <p className="text-sm font-medium text-slate-100">
+                          Average difficulty{" "}
+                          {result.matchedJpdb.entry.averageDifficulty}
+                          /100
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <a
+                          className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                          href={result.matchedJpdb.entry.jpdbUrl}
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Open
+                          <ExternalLink />
+                        </a>
+                      </Button>
+                    </div>
+                    <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Peak difficulty
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {
+                            result.matchedJpdb.entry
+                              .peakDifficulty90thPercentile
+                          }
+                          /100
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Length
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedJpdb.entry.lengthInWords.toLocaleString()}{" "}
+                          words
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Unique words
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Unique kanji
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Words used once
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
+                          ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}
+                          %)
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Unique readings
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+                {result.matchedLearnNatively ? (
+                  <div className="grid gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                          LearnNatively
+                        </p>
+                        <p className="text-sm font-medium text-slate-100">
+                          {result.matchedLearnNatively.entry.level} •{" "}
+                          {result.matchedLearnNatively.jlptEquivalent}{" "}
+                          <span className="text-slate-400">
+                            {
+                              learnNativelyJlptDescriptions[
+                                result.matchedLearnNatively.jlptEquivalent
+                              ]
+                            }
+                          </span>
+                        </p>
+                      </div>
+                      <Button asChild size="sm" variant="outline">
+                        <a
+                          className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                          href={
+                            result.matchedLearnNatively.entry.learnnativelyUrl
+                          }
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          Open
+                          <ExternalLink />
+                        </a>
+                      </Button>
+                    </div>
+                    <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          Exact level
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedLearnNatively.entry.level}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
+                          JLPT equivalent
+                        </p>
+                        <p className="mt-1 font-medium text-slate-100">
+                          {result.matchedLearnNatively.jlptEquivalent}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
                 {result.isAmbiguous && result.alternates.length > 0 ? (
                   <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-amber-400/10 p-4">
                     <div className="flex items-center gap-2 text-amber-100">
@@ -506,12 +815,21 @@ export function AnimeOverlapPage({
   const [selectedGenres, setSelectedGenres] = useState(new Set<string>())
   const [hideIncomplete, setHideIncomplete] = useState(false)
   const [hideLowConfidence, setHideLowConfidence] = useState(false)
+  const [difficultyFilterMode, setDifficultyFilterMode] =
+    useState<DifficultyFilterMode>("none")
+  const [jpdbDifficultyRange, setJpdbDifficultyRange] =
+    useState<NumericRange | null>(null)
+  const [learnNativelyLevelRange, setLearnNativelyLevelRange] =
+    useState<NumericRange | null>(null)
+  const [learnNativelyJlptRange, setLearnNativelyJlptRange] =
+    useState<NumericRange | null>(null)
   const [sortBy, setSortBy] = useState<SortOption>("status")
   const [lookupState, setLookupState] = useState<LookupResponse | null>(null)
   const [isPending, setIsPending] = useState(false)
   const [selectedResult, setSelectedResult] = useState<OverlapResult | null>(
     null
   )
+
   const hasResultsState = lookupState?.ok === true
   const availableGenres = lookupState?.ok
     ? [
@@ -522,6 +840,63 @@ export function AnimeOverlapPage({
         ),
       ].sort((left, right) => left.localeCompare(right))
     : []
+  const availableJpdbDifficultyBounds = lookupState?.ok
+    ? getNumericBounds(
+        lookupState.results
+          .map((result) => result.matchedJpdb?.entry.averageDifficulty)
+          .filter((value): value is number => typeof value === "number")
+      )
+    : null
+  const availableLearnNativelyLevelBounds = lookupState?.ok
+    ? getNumericBounds(
+        lookupState.results
+          .map((result) => result.matchedLearnNatively?.levelNumber)
+          .filter((value): value is number => typeof value === "number")
+      )
+    : null
+  const hasLearnNativelyMatches = Boolean(
+    lookupState?.ok &&
+      lookupState.results.some((result) => result.matchedLearnNatively)
+  )
+  const availableLearnNativelyJlptBounds = hasLearnNativelyMatches
+    ? ([0, learnNativelyJlptEquivalents.length - 1] as NumericRange)
+    : null
+
+  useEffect(() => {
+    setJpdbDifficultyRange((current) =>
+      normalizeRange(current, availableJpdbDifficultyBounds)
+    )
+    setLearnNativelyLevelRange((current) =>
+      normalizeRange(current, availableLearnNativelyLevelBounds)
+    )
+    setLearnNativelyJlptRange((current) =>
+      normalizeRange(current, availableLearnNativelyJlptBounds)
+    )
+  }, [
+    availableJpdbDifficultyBounds?.[0],
+    availableJpdbDifficultyBounds?.[1],
+    availableLearnNativelyLevelBounds?.[0],
+    availableLearnNativelyLevelBounds?.[1],
+    availableLearnNativelyJlptBounds?.[0],
+    availableLearnNativelyJlptBounds?.[1],
+  ])
+
+  const activeDifficultyBounds =
+    difficultyFilterMode === "jpdbAverageDifficulty"
+      ? availableJpdbDifficultyBounds
+      : difficultyFilterMode === "learnNativelyLevel"
+        ? availableLearnNativelyLevelBounds
+        : difficultyFilterMode === "learnNativelyJlptEquivalent"
+          ? availableLearnNativelyJlptBounds
+          : null
+  const activeDifficultyRange =
+    difficultyFilterMode === "jpdbAverageDifficulty"
+      ? jpdbDifficultyRange
+      : difficultyFilterMode === "learnNativelyLevel"
+        ? learnNativelyLevelRange
+        : difficultyFilterMode === "learnNativelyJlptEquivalent"
+          ? learnNativelyJlptRange
+          : null
 
   const visibleResults = lookupState?.ok
     ? sortResults(
@@ -554,13 +929,54 @@ export function AnimeOverlapPage({
             return false
           }
 
+          if (difficultyFilterMode === "jpdbAverageDifficulty") {
+            if (!result.matchedJpdb || !jpdbDifficultyRange) {
+              return false
+            }
+
+            return (
+              result.matchedJpdb.entry.averageDifficulty >=
+                jpdbDifficultyRange[0] &&
+              result.matchedJpdb.entry.averageDifficulty <=
+                jpdbDifficultyRange[1]
+            )
+          }
+
+          if (difficultyFilterMode === "learnNativelyLevel") {
+            if (!result.matchedLearnNatively || !learnNativelyLevelRange) {
+              return false
+            }
+
+            return (
+              result.matchedLearnNatively.levelNumber >=
+                learnNativelyLevelRange[0] &&
+              result.matchedLearnNatively.levelNumber <=
+                learnNativelyLevelRange[1]
+            )
+          }
+
+          if (difficultyFilterMode === "learnNativelyJlptEquivalent") {
+            if (!result.matchedLearnNatively || !learnNativelyJlptRange) {
+              return false
+            }
+
+            const equivalentIndex = getLearnNativelyJlptEquivalentIndex(
+              result.matchedLearnNatively.jlptEquivalent
+            )
+
+            return (
+              equivalentIndex >= learnNativelyJlptRange[0] &&
+              equivalentIndex <= learnNativelyJlptRange[1]
+            )
+          }
+
           return true
         }),
         sortBy
       )
     : []
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const nextUsername = username.trim()
 
@@ -723,6 +1139,116 @@ export function AnimeOverlapPage({
                       searchPlaceholder="Search genres..."
                       selectedValues={selectedGenres}
                     />
+                  </div>
+                ) : null}
+
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
+                    Difficulty filter
+                  </Label>
+                  <Select
+                    onValueChange={(value) =>
+                      setDifficultyFilterMode(value as DifficultyFilterMode)
+                    }
+                    value={difficultyFilterMode}
+                  >
+                    <SelectTrigger
+                      aria-label="Difficulty filter"
+                      className="w-full justify-between rounded border-0 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-400 shadow-none hover:bg-slate-800 data-[size=default]:h-10 [&>svg]:text-slate-400 [&>svg]:opacity-90"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent
+                      className="w-[var(--radix-select-trigger-width)] overflow-hidden rounded border-slate-800 bg-slate-950 p-0 text-slate-400"
+                      position="popper"
+                    >
+                      {difficultyFilterModes.map((mode) => (
+                        <SelectItem
+                          className="rounded-none py-2 text-[15px] text-slate-400 focus:bg-slate-800 focus:text-slate-100 hover:text-slate-100"
+                          key={mode}
+                          value={mode}
+                        >
+                          {difficultyFilterModeLabels[mode]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {difficultyFilterMode !== "none" ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between gap-3 text-sm text-slate-300">
+                      <span>Allowed range</span>
+                      {activeDifficultyBounds && activeDifficultyRange ? (
+                        <span className="font-medium text-slate-100">
+                          {formatDifficultyRangeValue(
+                            difficultyFilterMode,
+                            activeDifficultyRange[0]
+                          )}{" "}
+                          -{" "}
+                          {formatDifficultyRangeValue(
+                            difficultyFilterMode,
+                            activeDifficultyRange[1]
+                          )}
+                        </span>
+                      ) : (
+                        <span className="text-slate-500">No matched data</span>
+                      )}
+                    </div>
+                    {activeDifficultyBounds && activeDifficultyRange ? (
+                      <>
+                        <Slider
+                          aria-label={`${difficultyFilterModeLabels[difficultyFilterMode]} range`}
+                          className="py-1"
+                          max={activeDifficultyBounds[1]}
+                          min={activeDifficultyBounds[0]}
+                          onValueChange={(nextRange: number[]) => {
+                            if (nextRange.length !== 2) {
+                              return
+                            }
+
+                            const normalizedNextRange = [
+                              Math.min(nextRange[0], nextRange[1]),
+                              Math.max(nextRange[0], nextRange[1]),
+                            ] as NumericRange
+
+                            if (
+                              difficultyFilterMode === "jpdbAverageDifficulty"
+                            ) {
+                              setJpdbDifficultyRange(normalizedNextRange)
+                              return
+                            }
+
+                            if (difficultyFilterMode === "learnNativelyLevel") {
+                              setLearnNativelyLevelRange(normalizedNextRange)
+                              return
+                            }
+
+                            setLearnNativelyJlptRange(normalizedNextRange)
+                          }}
+                          step={1}
+                          value={activeDifficultyRange}
+                        />
+                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                          <span>
+                            {formatDifficultyRangeValue(
+                              difficultyFilterMode,
+                              activeDifficultyBounds[0]
+                            )}
+                          </span>
+                          <span>
+                            {formatDifficultyRangeValue(
+                              difficultyFilterMode,
+                              activeDifficultyBounds[1]
+                            )}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-slate-500">
+                        No results currently have data for this filter.
+                      </p>
+                    )}
                   </div>
                 ) : null}
 

@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest"
-import { matchAnime } from "@/lib/matching"
-import type { AniListEntry, JimakuEntry } from "@/lib/types"
+import {
+  matchAnime,
+  matchJpdbAnimeDifficulty,
+  matchLearnNativelyAnimationLevel,
+} from "@/lib/matching"
+import type {
+  AniListEntry,
+  JimakuEntry,
+  JpdbAnimeDifficultyEntry,
+  LearnNativelyAnimationLevelEntry,
+} from "@/lib/types"
 
 const baseAniListEntry: AniListEntry = {
   id: 1,
@@ -45,6 +54,27 @@ const byIdMatch: JimakuEntry = {
     "march comes in like a lion",
     "3月のライオン",
   ],
+}
+
+const baseJpdbEntry: JpdbAnimeDifficultyEntry = {
+  name: "March comes in like a lion",
+  jpdbUrl: "https://jpdb.io/anime/101/march-comes-in-like-a-lion",
+  lengthInWords: 12345,
+  uniqueWords: 2000,
+  uniqueWordsUsedOnce: 900,
+  uniqueWordsUsedOncePercent: 45,
+  uniqueKanji: 700,
+  uniqueKanjiUsedOnce: 200,
+  uniqueKanjiReadings: 1000,
+  averageDifficulty: 25,
+  peakDifficulty90thPercentile: 55,
+}
+
+const baseLearnNativelyEntry: LearnNativelyAnimationLevelEntry = {
+  learnnativelyUrl:
+    "https://learnnatively.com/season/march-comes-in-like-a-lion/",
+  name: "March comes in like a lion",
+  level: "L20",
 }
 
 describe("matchAnime", () => {
@@ -152,5 +182,105 @@ describe("matchAnime", () => {
 
     expect(result?.matchReason).toBe("fuzzy")
     expect(result?.matchScore).toBeGreaterThanOrEqual(0.82)
+  })
+
+  it("matches JPDB entries on exact normalized titles", () => {
+    const result = matchJpdbAnimeDifficulty(baseAniListEntry, [baseJpdbEntry])
+
+    expect(result?.matchReason).toBe("exact-title")
+    expect(result?.entry.averageDifficulty).toBe(25)
+  })
+
+  it("matches LearnNatively entries on exact normalized titles", () => {
+    const result = matchLearnNativelyAnimationLevel(baseAniListEntry, [
+      {
+        ...baseLearnNativelyEntry,
+        name: "３月のライオン",
+      },
+    ])
+
+    expect(result?.matchReason).toBe("exact-title")
+    expect(result?.entry.level).toBe("L20")
+  })
+
+  it("accepts strong LearnNatively fuzzy matches", () => {
+    const result = matchLearnNativelyAnimationLevel(
+      {
+        ...baseAniListEntry,
+        media: {
+          ...baseAniListEntry.media,
+          id: 999,
+          title: {
+            romaji: "March Comes Like a Lion",
+            english: null,
+            native: null,
+          },
+          synonyms: [],
+        },
+      },
+      [baseLearnNativelyEntry]
+    )
+
+    expect(result?.matchReason).toBe("fuzzy")
+    expect(result?.matchScore).toBeGreaterThanOrEqual(0.82)
+  })
+
+  it("rejects single-token fuzzy JPDB matches", () => {
+    const result = matchJpdbAnimeDifficulty(
+      {
+        ...baseAniListEntry,
+        media: {
+          ...baseAniListEntry.media,
+          id: 999,
+          title: {
+            romaji: "Canaan",
+            english: null,
+            native: null,
+          },
+          synonyms: [],
+        },
+      },
+      [
+        {
+          ...baseJpdbEntry,
+          name: "NANA",
+          jpdbUrl: "https://jpdb.io/anime/15/nana",
+        },
+      ]
+    )
+
+    expect(result).toBeNull()
+  })
+
+  it("rejects ambiguous LearnNatively fuzzy matches", () => {
+    const result = matchLearnNativelyAnimationLevel(
+      {
+        ...baseAniListEntry,
+        media: {
+          ...baseAniListEntry.media,
+          id: 999,
+          title: {
+            romaji: "Dandadann",
+            english: null,
+            native: null,
+          },
+          synonyms: [],
+        },
+      },
+      [
+        {
+          ...baseLearnNativelyEntry,
+          name: "Dandadan",
+          learnnativelyUrl: "https://learnnatively.com/season/dandadan/",
+        },
+        {
+          ...baseLearnNativelyEntry,
+          name: "Dandadn",
+          learnnativelyUrl: "https://learnnatively.com/season/dandadn/",
+        },
+      ]
+    )
+
+    expect(result).toBeNull()
   })
 })

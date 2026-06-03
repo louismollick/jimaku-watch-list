@@ -16,9 +16,26 @@ export const anilistMediaStatuses = [
 ] as const
 
 export const sortOptions = ["status", "averageScore", "popularity"] as const
+export const difficultyFilterModes = [
+  "none",
+  "jpdbAverageDifficulty",
+  "learnNativelyLevel",
+  "learnNativelyJlptEquivalent",
+] as const
+export const learnNativelyJlptEquivalents = [
+  "N5",
+  "N4",
+  "N3",
+  "N2",
+  "N1",
+  "N1+",
+] as const
 
 export type AniListWatchStatus = (typeof anilistWatchStatuses)[number]
 export type SortOption = (typeof sortOptions)[number]
+export type DifficultyFilterMode = (typeof difficultyFilterModes)[number]
+export type LearnNativelyJlptEquivalent =
+  (typeof learnNativelyJlptEquivalents)[number]
 
 export type AniListMediaStatus = (typeof anilistMediaStatuses)[number] | null
 
@@ -65,6 +82,26 @@ export type JimakuEntry = {
   normalizedTitles: string[]
 }
 
+export type JpdbAnimeDifficultyEntry = {
+  name: string
+  jpdbUrl: string
+  lengthInWords: number
+  uniqueWords: number
+  uniqueWordsUsedOnce: number
+  uniqueWordsUsedOncePercent: number
+  uniqueKanji: number
+  uniqueKanjiUsedOnce: number
+  uniqueKanjiReadings: number
+  averageDifficulty: number
+  peakDifficulty90thPercentile: number
+}
+
+export type LearnNativelyAnimationLevelEntry = {
+  learnnativelyUrl: string
+  name: string
+  level: string
+}
+
 export type MatchReason = "anilist-id" | "exact-title" | "fuzzy"
 
 export type MatchCandidate = {
@@ -72,6 +109,19 @@ export type MatchCandidate = {
   score: number
   reason: MatchReason
 }
+
+export type DatasetMatch<TEntry> = {
+  entry: TEntry
+  matchScore: number
+  matchReason: MatchReason
+  isLowConfidence: boolean
+}
+
+export type LearnNativelyMatch =
+  DatasetMatch<LearnNativelyAnimationLevelEntry> & {
+    jlptEquivalent: LearnNativelyJlptEquivalent
+    levelNumber: number
+  }
 
 export type Completeness = "complete" | "incomplete" | "unknown"
 
@@ -84,6 +134,8 @@ export type OverlapResult = {
   isAmbiguous: boolean
   isLowConfidence: boolean
   completeness: Completeness
+  matchedJpdb?: DatasetMatch<JpdbAnimeDifficultyEntry>
+  matchedLearnNatively?: LearnNativelyMatch
 }
 
 export type LookupResponse =

@@ -10,7 +10,7 @@ export function shouldUseVercelRuntimeCache() {
 }
 
 export function getLookupCacheKey(username: string) {
-  return `overlap:${username.trim().toLowerCase()}`
+  return `overlap:v2:${username.trim().toLowerCase()}`
 }
 
 export function getLookupCacheTtlSeconds(result: LookupResponse) {

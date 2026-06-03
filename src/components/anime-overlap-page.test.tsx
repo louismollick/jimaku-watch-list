@@ -57,6 +57,36 @@ function successResponse(): LookupResponse {
         isAmbiguous: false,
         isLowConfidence: false,
         completeness: "complete",
+        matchedJpdb: {
+          entry: {
+            name: "Blue Box",
+            jpdbUrl: "https://jpdb.io/anime/11/blue-box",
+            lengthInWords: 12000,
+            uniqueWords: 1800,
+            uniqueWordsUsedOnce: 700,
+            uniqueWordsUsedOncePercent: 39,
+            uniqueKanji: 650,
+            uniqueKanjiUsedOnce: 180,
+            uniqueKanjiReadings: 920,
+            averageDifficulty: 10,
+            peakDifficulty90thPercentile: 32,
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+          isLowConfidence: false,
+        },
+        matchedLearnNatively: {
+          entry: {
+            learnnativelyUrl: "https://learnnatively.com/season/blue-box/",
+            name: "Blue Box",
+            level: "L0",
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+          isLowConfidence: false,
+          jlptEquivalent: "N5",
+          levelNumber: 0,
+        },
       },
       {
         anilistEntry: {
@@ -104,6 +134,36 @@ function successResponse(): LookupResponse {
         isAmbiguous: false,
         isLowConfidence: false,
         completeness: "incomplete",
+        matchedJpdb: {
+          entry: {
+            name: "Orb",
+            jpdbUrl: "https://jpdb.io/anime/12/orb",
+            lengthInWords: 30000,
+            uniqueWords: 4000,
+            uniqueWordsUsedOnce: 1600,
+            uniqueWordsUsedOncePercent: 40,
+            uniqueKanji: 1200,
+            uniqueKanjiUsedOnce: 350,
+            uniqueKanjiReadings: 1750,
+            averageDifficulty: 80,
+            peakDifficulty90thPercentile: 96,
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+          isLowConfidence: false,
+        },
+        matchedLearnNatively: {
+          entry: {
+            learnnativelyUrl: "https://learnnatively.com/season/orb/",
+            name: "Orb",
+            level: "L40",
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+          isLowConfidence: false,
+          jlptEquivalent: "N1",
+          levelNumber: 40,
+        },
       },
       {
         anilistEntry: {
@@ -177,6 +237,14 @@ function successResponse(): LookupResponse {
 async function selectComboboxOption(comboboxName: string, optionLabel: string) {
   fireEvent.click(await screen.findByRole("combobox", { name: comboboxName }))
   fireEvent.click(await screen.findByText(optionLabel))
+}
+
+function nudgeSlider(slider: HTMLElement, key: string, count = 1) {
+  slider.focus()
+
+  for (let index = 0; index < count; index += 1) {
+    fireEvent.keyDown(slider, { key })
+  }
 }
 
 describe("AnimeOverlapPage", () => {
@@ -346,5 +414,98 @@ describe("AnimeOverlapPage", () => {
     ).toBeInTheDocument()
     expect(screen.getByText("Low Confidence Show Alt")).toBeInTheDocument()
     expect(screen.getByText("Low confidence")).toBeInTheDocument()
+  })
+
+  it("renders difficulty badges and modal metadata", async () => {
+    const lookup = vi.fn().mockResolvedValue(successResponse())
+    render(<AnimeOverlapPage lookup={lookup} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Enter AniList username"), {
+      target: { value: "mollicl" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+    await screen.findByText("3 matches")
+    expect(screen.getAllByText("10/100").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("N5").length).toBeGreaterThan(0)
+
+    fireEvent.click((await screen.findAllByText("Blue Box"))[0])
+
+    expect(
+      await screen.findByText(/average difficulty 10\/100/i)
+    ).toBeInTheDocument()
+    expect(screen.getByText("Peak difficulty")).toBeInTheDocument()
+    expect(screen.getByText("Exact level")).toBeInTheDocument()
+    expect(screen.getByText("L0")).toBeInTheDocument()
+  })
+
+  it("filters by JPDB difficulty range and excludes unmatched difficulty entries", async () => {
+    const lookup = vi.fn().mockResolvedValue(successResponse())
+    render(<AnimeOverlapPage lookup={lookup} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Enter AniList username"), {
+      target: { value: "mollicl" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+    await screen.findByText("3 matches")
+    await selectComboboxOption("Difficulty filter", "JPDB Average Difficulty")
+
+    await waitFor(() => {
+      expect(screen.queryByText("Low Confidence Show")).not.toBeInTheDocument()
+    })
+
+    const sliders = screen.getAllByRole("slider")
+    nudgeSlider(sliders[1], "ArrowLeft")
+
+    await waitFor(() => {
+      expect(screen.queryByText("Orb")).not.toBeInTheDocument()
+    })
+    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+  })
+
+  it("filters by LearnNatively level range", async () => {
+    const lookup = vi.fn().mockResolvedValue(successResponse())
+    render(<AnimeOverlapPage lookup={lookup} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Enter AniList username"), {
+      target: { value: "mollicl" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+    await screen.findByText("3 matches")
+    await selectComboboxOption("Difficulty filter", "LearnNatively Level")
+
+    const sliders = screen.getAllByRole("slider")
+    nudgeSlider(sliders[0], "ArrowRight")
+
+    await waitFor(() => {
+      expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
+    })
+    expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
+  })
+
+  it("filters by LearnNatively JLPT equivalent range", async () => {
+    const lookup = vi.fn().mockResolvedValue(successResponse())
+    render(<AnimeOverlapPage lookup={lookup} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Enter AniList username"), {
+      target: { value: "mollicl" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+    await screen.findByText("3 matches")
+    await selectComboboxOption(
+      "Difficulty filter",
+      "LearnNatively JLPT Equivalent"
+    )
+
+    const sliders = screen.getAllByRole("slider")
+    nudgeSlider(sliders[0], "ArrowRight")
+
+    await waitFor(() => {
+      expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
+    })
+    expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
   })
 })

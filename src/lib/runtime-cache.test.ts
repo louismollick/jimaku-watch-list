@@ -48,7 +48,7 @@ describe("runtime cache", () => {
   })
 
   it("normalizes lookup cache keys", () => {
-    expect(getLookupCacheKey("  MolLiCl  ")).toBe("overlap:mollicl")
+    expect(getLookupCacheKey("  MolLiCl  ")).toBe("overlap:v2:mollicl")
   })
 
   it("uses shorter ttl for upstream errors", () => {
@@ -109,8 +109,8 @@ describe("runtime cache", () => {
     await writeCachedLookupResponse("MolLiCl", cachedResponse)
 
     expect(getCacheMock).toHaveBeenCalledTimes(2)
-    expect(getMock).toHaveBeenCalledWith("overlap:mollicl")
-    expect(setMock).toHaveBeenCalledWith("overlap:mollicl", cachedResponse, {
+    expect(getMock).toHaveBeenCalledWith("overlap:v2:mollicl")
+    expect(setMock).toHaveBeenCalledWith("overlap:v2:mollicl", cachedResponse, {
       ttl: 3600,
       tags: ["anilist-user:mollicl"],
     })

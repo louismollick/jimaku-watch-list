@@ -97,7 +97,10 @@ function parsePageEntries(
     }
 
     return {
-      learnnativelyUrl: new URL(item.url, "https://learnnatively.com").toString(),
+      learnnativelyUrl: new URL(
+        item.url,
+        "https://learnnatively.com"
+      ).toString(),
       name: item.title,
       level: `L${item.rating.lvl}`,
     }

@@ -1,7 +1,10 @@
 import { normalizeTitle, titleTokens, uniqStrings } from "@/lib/normalize"
 import type {
   AniListEntry,
+  DatasetMatch,
   JimakuEntry,
+  JpdbAnimeDifficultyEntry,
+  LearnNativelyAnimationLevelEntry,
   MatchCandidate,
   MatchReason,
 } from "@/lib/types"
@@ -18,15 +21,45 @@ type PreparedTitle = {
   tokens: Set<string>
 }
 
-type PreparedJimakuEntry = {
-  entry: JimakuEntry
+type PreparedDatasetEntry<TEntry> = {
+  entry: TEntry
   preparedTitles: PreparedTitle[]
+}
+
+type TitleMatcherCandidate<TEntry> = {
+  entry: TEntry
+  score: number
+  tokenScore: number
+  reason: MatchReason
+}
+
+type TitleMatcherResult<TEntry> = {
+  matchedEntry: TEntry
+  alternates: TitleMatcherCandidate<TEntry>[]
+  matchScore: number
+  matchReason: MatchReason
+  isAmbiguous: boolean
+  isLowConfidence: boolean
+}
+
+type TitleMatcherOptions<TEntry> = {
+  entries: TEntry[]
+  getAniListId?: (entry: TEntry) => number | null
+  getTitles: (entry: TEntry) => string[]
 }
 
 const matcherCache = new WeakMap<
   JimakuEntry[],
-  (entry: AniListEntry) => ReturnType<typeof buildMatch> | null
+  (entry: AniListEntry) => {
+    matchedJimaku: JimakuEntry
+    alternates: MatchCandidate[]
+    matchScore: number
+    matchReason: MatchReason
+    isAmbiguous: boolean
+    isLowConfidence: boolean
+  } | null
 >()
+const datasetMatcherCache = new WeakMap<object, unknown>()
 
 function bigramsFromNormalized(normalized: string) {
   const collapsed = normalized.replace(/\s+/g, "")
@@ -99,16 +132,16 @@ export function getAniListTitles(entry: AniListEntry) {
   ])
 }
 
-function buildMatch(
-  matchedJimaku: JimakuEntry,
-  alternates: MatchCandidate[],
+function buildTitleMatch<TEntry>(
+  matchedEntry: TEntry,
+  alternates: TitleMatcherCandidate<TEntry>[],
   matchScore: number,
   matchReason: MatchReason,
   isAmbiguous: boolean,
   isLowConfidence: boolean
-) {
+): TitleMatcherResult<TEntry> {
   return {
-    matchedJimaku,
+    matchedEntry,
     alternates,
     matchScore,
     matchReason,
@@ -117,27 +150,36 @@ function buildMatch(
   }
 }
 
-function buildMatcher(jimakuEntries: JimakuEntry[]) {
-  const idMap = new Map<number, JimakuEntry>()
-  const normalizedTitleMap = new Map<string, JimakuEntry[]>()
+function buildDatasetMatcher<TEntry>({
+  entries,
+  getAniListId,
+  getTitles,
+}: TitleMatcherOptions<TEntry>) {
+  const idMap = new Map<number, TEntry>()
+  const normalizedTitleMap = new Map<string, TEntry[]>()
   const tokenIndex = new Map<string, Set<number>>()
-  const preparedEntries: PreparedJimakuEntry[] = jimakuEntries.map(
-    (jimakuEntry, index) => {
-      if (jimakuEntry.anilistId) {
-        idMap.set(jimakuEntry.anilistId, jimakuEntry)
+  const preparedEntries: PreparedDatasetEntry<TEntry>[] = entries.map(
+    (entry, index) => {
+      const aniListId = getAniListId?.(entry)
+
+      if (aniListId) {
+        idMap.set(aniListId, entry)
       }
 
-      for (const normalizedTitle of jimakuEntry.normalizedTitles) {
+      const titles = uniqStrings(getTitles(entry))
+      const normalizedTitles = titles.map(normalizeTitle).filter(Boolean)
+
+      for (const normalizedTitle of normalizedTitles) {
         const matches = normalizedTitleMap.get(normalizedTitle)
 
         if (matches) {
-          matches.push(jimakuEntry)
+          matches.push(entry)
         } else {
-          normalizedTitleMap.set(normalizedTitle, [jimakuEntry])
+          normalizedTitleMap.set(normalizedTitle, [entry])
         }
       }
 
-      for (const token of new Set(jimakuEntry.titles.flatMap(titleTokens))) {
+      for (const token of new Set(titles.flatMap(titleTokens))) {
         const matches = tokenIndex.get(token)
 
         if (matches) {
@@ -148,8 +190,8 @@ function buildMatcher(jimakuEntries: JimakuEntry[]) {
       }
 
       return {
-        entry: jimakuEntry,
-        preparedTitles: jimakuEntry.titles.map(prepareTitle),
+        entry,
+        preparedTitles: titles.map(prepareTitle),
       }
     }
   )
@@ -159,7 +201,7 @@ function buildMatcher(jimakuEntries: JimakuEntry[]) {
       const byId = idMap.get(entry.media.id)
 
       if (byId) {
-        return buildMatch(byId, [], 1, "anilist-id", false, false)
+        return buildTitleMatch(byId, [], 1, "anilist-id", false, false)
       }
     }
 
@@ -173,7 +215,7 @@ function buildMatcher(jimakuEntries: JimakuEntry[]) {
       const exactTitleMatches = normalizedTitleMap.get(normalizedTitle)
 
       if (exactTitleMatches?.[0]) {
-        return buildMatch(
+        return buildTitleMatch(
           exactTitleMatches[0],
           [],
           0.98,
@@ -211,49 +253,49 @@ function buildMatcher(jimakuEntries: JimakuEntry[]) {
 
     const candidates = [...candidateIndexes].length
       ? [...candidateIndexes].map((index) => {
-          const jimakuEntry = preparedEntries[index]
+          const matchedEntry = preparedEntries[index]
           let score = 0
           let tokenScore = 0
 
           for (const aniListTitle of preparedAniListTitles) {
-            for (const jimakuTitle of jimakuEntry.preparedTitles) {
+            for (const candidateTitle of matchedEntry.preparedTitles) {
               score = Math.max(
                 score,
-                titleSimilarity(aniListTitle, jimakuTitle)
+                titleSimilarity(aniListTitle, candidateTitle)
               )
               tokenScore = Math.max(
                 tokenScore,
-                strongestTokenOverlap(aniListTitle, jimakuTitle)
+                strongestTokenOverlap(aniListTitle, candidateTitle)
               )
             }
           }
 
           return {
-            jimakuEntry: jimakuEntry.entry,
+            entry: matchedEntry.entry,
             score,
             tokenScore,
             reason: "fuzzy" as MatchReason,
           }
         })
-      : preparedEntries.map((jimakuEntry) => {
+      : preparedEntries.map((matchedEntry) => {
           let score = 0
           let tokenScore = 0
 
           for (const aniListTitle of preparedAniListTitles) {
-            for (const jimakuTitle of jimakuEntry.preparedTitles) {
+            for (const candidateTitle of matchedEntry.preparedTitles) {
               score = Math.max(
                 score,
-                titleSimilarity(aniListTitle, jimakuTitle)
+                titleSimilarity(aniListTitle, candidateTitle)
               )
               tokenScore = Math.max(
                 tokenScore,
-                strongestTokenOverlap(aniListTitle, jimakuTitle)
+                strongestTokenOverlap(aniListTitle, candidateTitle)
               )
             }
           }
 
           return {
-            jimakuEntry: jimakuEntry.entry,
+            entry: matchedEntry.entry,
             score,
             tokenScore,
             reason: "fuzzy" as MatchReason,
@@ -286,14 +328,77 @@ function buildMatcher(jimakuEntries: JimakuEntry[]) {
         (candidate) => candidate.score >= topCandidate.score - ambiguousMargin
       )
 
-    return buildMatch(
-      topCandidate.jimakuEntry,
+    return buildTitleMatch(
+      topCandidate.entry,
       alternates,
       topCandidate.score,
       "fuzzy",
       alternates.length > 0,
       topCandidate.score < lowConfidenceThreshold
     )
+  }
+}
+
+function buildMatcher(jimakuEntries: JimakuEntry[]) {
+  const matcher = buildDatasetMatcher({
+    entries: jimakuEntries,
+    getAniListId: (entry) => entry.anilistId,
+    getTitles: (entry) => entry.titles,
+  })
+
+  return (entry: AniListEntry) => {
+    const matched = matcher(entry)
+
+    if (!matched) {
+      return null
+    }
+
+    return {
+      matchedJimaku: matched.matchedEntry as JimakuEntry,
+      alternates: matched.alternates.map((candidate) => ({
+        jimakuEntry: candidate.entry as JimakuEntry,
+        score: candidate.score,
+        reason: candidate.reason,
+      })),
+      matchScore: matched.matchScore,
+      matchReason: matched.matchReason,
+      isAmbiguous: matched.isAmbiguous,
+      isLowConfidence: matched.isLowConfidence,
+    }
+  }
+}
+
+function getCachedDatasetMatcher<TEntry>(
+  entries: TEntry[],
+  getTitles: (entry: TEntry) => string[]
+) {
+  let matcher = datasetMatcherCache.get(entries) as
+    | ((entry: AniListEntry) => TitleMatcherResult<TEntry> | null)
+    | undefined
+
+  if (!matcher) {
+    matcher = buildDatasetMatcher({
+      entries,
+      getTitles,
+    })
+    datasetMatcherCache.set(entries, matcher)
+  }
+
+  return matcher
+}
+
+function toDatasetMatch<TEntry>(
+  matched: TitleMatcherResult<TEntry> | null
+): DatasetMatch<TEntry> | null {
+  if (!matched) {
+    return null
+  }
+
+  return {
+    entry: matched.matchedEntry,
+    matchScore: matched.matchScore,
+    matchReason: matched.matchReason,
+    isLowConfidence: matched.isLowConfidence,
   }
 }
 
@@ -306,4 +411,24 @@ export function matchAnime(entry: AniListEntry, jimakuEntries: JimakuEntry[]) {
   }
 
   return matcher(entry)
+}
+
+export function matchJpdbAnimeDifficulty(
+  entry: AniListEntry,
+  jpdbEntries: JpdbAnimeDifficultyEntry[]
+) {
+  return toDatasetMatch(
+    getCachedDatasetMatcher(jpdbEntries, (jpdbEntry) => [jpdbEntry.name])(entry)
+  )
+}
+
+export function matchLearnNativelyAnimationLevel(
+  entry: AniListEntry,
+  learnNativelyEntries: LearnNativelyAnimationLevelEntry[]
+) {
+  return toDatasetMatch(
+    getCachedDatasetMatcher(learnNativelyEntries, (learnNativelyEntry) => [
+      learnNativelyEntry.name,
+    ])(entry)
+  )
 }
