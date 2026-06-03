@@ -12,7 +12,8 @@
     "check": "biome check --write .",
     "typecheck": "tsc --noEmit",
     "refresh-jimaku-snapshot": "tsx ./scripts/refresh-jimaku-snapshot.ts",
-    "refresh-jpdb-anime-difficulty": "tsx ./scripts/refresh-jpdb-anime-difficulty.ts"
+    "refresh-jpdb-anime-difficulty": "tsx ./scripts/refresh-jpdb-anime-difficulty.ts",
+    "refresh-learnnatively-animation-levels": "tsx ./scripts/refresh-learnnatively-animation-levels.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist": "^5.2.9",
