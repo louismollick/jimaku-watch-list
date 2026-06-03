@@ -2,6 +2,19 @@ import { mkdir, writeFile } from "node:fs/promises"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 
+import type { JimakuEntry } from "../src/lib/types.ts"
+
+type JimakuPayload = {
+  anilist_id?: number | null
+  english_name?: string | null
+  flags?: number
+  japanese_name?: string | null
+  last_modified?: number | null
+  name: string
+}
+
+type JimakuEntryDraft = Omit<JimakuEntry, "fileCount">
+
 const rootDirectory = path.dirname(fileURLToPath(import.meta.url))
 const outputPath = path.resolve(
   rootDirectory,
@@ -9,7 +22,7 @@ const outputPath = path.resolve(
 )
 const jimakuHomePage = "https://jimaku.cc/"
 
-function decodeHtmlEntities(value) {
+function decodeHtmlEntities(value: string) {
   return value
     .replaceAll("&#34;", '"')
     .replaceAll("&quot;", '"')
@@ -17,7 +30,7 @@ function decodeHtmlEntities(value) {
     .replaceAll("&amp;", "&")
 }
 
-function normalizeTitle(value) {
+function normalizeTitle(value: string) {
   return value
     .normalize("NFKC")
     .toLowerCase()
@@ -28,9 +41,9 @@ function normalizeTitle(value) {
     .trim()
 }
 
-function uniqStrings(values) {
-  const seen = new Set()
-  const result = []
+function uniqStrings(values: Array<string | null | undefined>) {
+  const seen = new Set<string>()
+  const result: string[] = []
 
   for (const value of values) {
     const trimmed = value?.trim()
@@ -46,7 +59,7 @@ function uniqStrings(values) {
   return result
 }
 
-async function fetchText(url) {
+async function fetchText(url: string) {
   const response = await fetch(url, {
     headers: {
       "user-agent":
@@ -61,13 +74,13 @@ async function fetchText(url) {
   return response.text()
 }
 
-function parseHomepageEntries(html) {
-  const entries = []
+function parseHomepageEntries(html: string): JimakuEntryDraft[] {
+  const entries: JimakuEntryDraft[] = []
   const regex =
     /<div class="entry" data-extra="([^"]+)">\s*<a href="(\/entry\/(\d+))" class="table-data file-name">/g
 
   for (const match of html.matchAll(regex)) {
-    const payload = JSON.parse(decodeHtmlEntities(match[1]))
+    const payload = JSON.parse(decodeHtmlEntities(match[1])) as JimakuPayload
     const entryId = Number.parseInt(match[3], 10)
     const titles = uniqStrings([
       payload.name,
@@ -96,7 +109,7 @@ function parseHomepageEntries(html) {
   return entries
 }
 
-function parseFileCount(entryHtml, entryId) {
+function parseFileCount(entryHtml: string, entryId: number) {
   const match = entryHtml.match(
     /<span id="total-file-count">(\d+) file(?:s)?<\/span>/
   )
@@ -108,8 +121,12 @@ function parseFileCount(entryHtml, entryId) {
   return Number.parseInt(match[1], 10)
 }
 
-async function mapWithConcurrency(items, concurrency, mapper) {
-  const result = new Array(items.length)
+async function mapWithConcurrency<TInput, TOutput>(
+  items: TInput[],
+  concurrency: number,
+  mapper: (item: TInput, index: number) => Promise<TOutput>
+) {
+  const result = new Array<TOutput>(items.length)
   let nextIndex = 0
 
   async function worker() {
@@ -128,7 +145,7 @@ async function main() {
   const homepageHtml = await fetchText(jimakuHomePage)
   const baseEntries = parseHomepageEntries(homepageHtml)
 
-  const completeEntries = await mapWithConcurrency(
+  const completeEntries: JimakuEntry[] = await mapWithConcurrency(
     baseEntries,
     12,
     async (entry, index) => {
@@ -154,7 +171,7 @@ async function main() {
   console.log(`Wrote ${completeEntries.length} entries to ${outputPath}`)
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error(error)
   process.exitCode = 1
 })
