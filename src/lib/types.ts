@@ -10,9 +10,12 @@ export const anilistWatchStatuses = [
 export const anilistMediaStatuses = [
   "FINISHED",
   "RELEASING",
-  "NOT_YET_RELEASED",
   "CANCELLED",
   "HIATUS",
+] as const
+export const anilistMediaStatusesAll = [
+  ...anilistMediaStatuses,
+  "NOT_YET_RELEASED",
 ] as const
 
 export const sortOptions = ["status", "averageScore", "popularity"] as const
@@ -37,7 +40,7 @@ export type DifficultyFilterMode = (typeof difficultyFilterModes)[number]
 export type LearnNativelyJlptEquivalent =
   (typeof learnNativelyJlptEquivalents)[number]
 
-export type AniListMediaStatus = (typeof anilistMediaStatuses)[number] | null
+export type AniListMediaStatus = (typeof anilistMediaStatusesAll)[number] | null
 
 export type AniListMedia = {
   id: number

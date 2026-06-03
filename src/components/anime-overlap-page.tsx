@@ -810,7 +810,7 @@ export function AnimeOverlapPage({
     new Set(anilistWatchStatuses)
   )
   const [selectedMediaStatuses, setSelectedMediaStatuses] = useState(
-    new Set(anilistMediaStatuses)
+    new Set<Exclude<AniListMediaStatus, null>>(anilistMediaStatuses)
   )
   const [selectedGenres, setSelectedGenres] = useState(new Set<string>())
   const [hideIncomplete, setHideIncomplete] = useState(false)
@@ -1108,7 +1108,7 @@ export function AnimeOverlapPage({
                     onSelectedValuesChange={(nextSelectedValues) =>
                       setSelectedMediaStatuses(
                         nextSelectedValues as Set<
-                          (typeof anilistMediaStatuses)[number]
+                          Exclude<AniListMediaStatus, null>
                         >
                       )
                     }

@@ -119,5 +119,7 @@ export async function fetchAniListEntries(
 
   return lists
     .flatMap((list) => list.entries)
-    .filter((entry) => entry.media?.id)
+    .filter(
+      (entry) => entry.media?.id && entry.media.status !== "NOT_YET_RELEASED"
+    )
 }

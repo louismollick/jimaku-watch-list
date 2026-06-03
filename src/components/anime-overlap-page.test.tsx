@@ -334,6 +334,22 @@ describe("AnimeOverlapPage", () => {
     expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
   })
 
+  it("does not expose not yet released as an airing status filter", async () => {
+    const lookup = vi.fn().mockResolvedValue(successResponse())
+    render(<AnimeOverlapPage lookup={lookup} />)
+
+    fireEvent.change(screen.getByPlaceholderText("Enter AniList username"), {
+      target: { value: "mollicl" },
+    })
+    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+    await screen.findByText("Airing status")
+
+    fireEvent.click(screen.getByRole("combobox", { name: "Airing status" }))
+
+    expect(screen.queryByText("Not Yet Released")).not.toBeInTheDocument()
+  })
+
   it("filters out incomplete entries when hide incomplete Jimaku subtitles is enabled", async () => {
     const lookup = vi.fn().mockResolvedValue(successResponse())
     render(<AnimeOverlapPage lookup={lookup} />)

@@ -20,6 +20,32 @@ describe("fetchAniListEntries", () => {
               {
                 entries: [
                   {
+                    id: 2,
+                    status: "PLANNING",
+                    score: 0,
+                    progress: 0,
+                    media: {
+                      id: 11,
+                      episodes: 12,
+                      averageScore: 80,
+                      popularity: 1000,
+                      status: "NOT_YET_RELEASED",
+                      genres: ["Action"],
+                      format: "TV",
+                      siteUrl: "https://anilist.co/anime/11",
+                      synonyms: [],
+                      coverImage: {
+                        large: "https://example.com/b.jpg",
+                        color: "#000",
+                      },
+                      title: {
+                        romaji: "Bar",
+                        english: "Bar",
+                        native: "バー",
+                      },
+                    },
+                  },
+                  {
                     id: 1,
                     status: "CURRENT",
                     score: 50,
@@ -56,6 +82,7 @@ describe("fetchAniListEntries", () => {
     const result = await fetchAniListEntries("demo")
 
     expect(Array.isArray(result)).toBe(true)
+    expect(Array.isArray(result) ? result : []).toHaveLength(1)
     expect(Array.isArray(result) ? result[0].media.id : null).toBe(10)
     expect(Array.isArray(result) ? result[0].media.genres : []).toEqual([
       "Action",
