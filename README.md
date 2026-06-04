@@ -1,6 +1,6 @@
-# jimaku-watch-list
+# nani-next
 
-This app helps Japanese learners pick anime to watch with Japanese subtitles.
+Nani next? helps Japanese learners find their next anime to study japanese.
 
 It answers three questions at once:
 

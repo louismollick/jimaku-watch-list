@@ -18,7 +18,7 @@ export function getLookupCacheTtlSeconds(result: LookupResponse) {
 }
 
 function getLookupCache() {
-  return getCache({ namespace: "jimaku-watch-list" })
+  return getCache({ namespace: "nani-next" })
 }
 
 export async function readCachedLookupResponse(

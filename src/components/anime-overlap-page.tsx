@@ -1116,8 +1116,11 @@ export function AnimeOverlapPage({
             )}
           >
             <h1 className="text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl">
-              Anime List x Jimaku overlap finder
+              Nani next?
             </h1>
+            <p className="text-base text-slate-300 sm:text-lg">
+              Find your next anime to study japanese
+            </p>
             <form
               className="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row"
               onSubmit={handleSubmit}

@@ -27,8 +27,11 @@
     "includes": [
       "**",
       "!src/routeTree.gen.ts",
+      "!src/data/*.json",
       "!node_modules",
       "!dist",
+      "!.output",
+      "!.vercel",
       "!.vinxi"
     ]
   }

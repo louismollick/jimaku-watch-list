@@ -47,7 +47,7 @@ async function fetchJson(url: string) {
   const response = await fetch(url, {
     headers: {
       "user-agent":
-        "jimaku-watch-list/1.0 (+https://github.com/mollicl/jimaku-watch-list)",
+        "nani-next/1.0 (+https://github.com/louismollick/nani-next)",
     },
   })
 
