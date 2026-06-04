@@ -1133,7 +1133,7 @@ export function AnimeOverlapPage({
               >
                 <SelectTrigger
                   aria-label="Source"
-                  className="h-12 w-full text-base sm:w-44"
+                  className="h-12 w-full text-base data-[size=default]:h-12 sm:w-44"
                 >
                   <SelectValue />
                 </SelectTrigger>
