@@ -164,7 +164,7 @@ describe("matchAnime", () => {
     expect(result).toBeNull()
   })
 
-  it("accepts strong multi-token fuzzy matches", () => {
+  it("accepts strong multi-token fuzzy matches above the cutoff", () => {
     const result = matchAnime(
       {
         ...baseAniListEntry,
@@ -174,7 +174,7 @@ describe("matchAnime", () => {
           anilistId: null,
           myanimelistId: null,
           title: {
-            primary: "March Comes Like a Lion",
+            primary: "March Comes in Like a Lio",
             english: null,
             native: null,
           },
@@ -195,7 +195,40 @@ describe("matchAnime", () => {
     )
 
     expect(result?.matchReason).toBe("fuzzy")
-    expect(result?.matchScore).toBeGreaterThanOrEqual(0.82)
+    expect(result?.matchScore).toBeGreaterThanOrEqual(0.9)
+  })
+
+  it("rejects fuzzy matches below the cutoff", () => {
+    const result = matchAnime(
+      {
+        ...baseAniListEntry,
+        media: {
+          ...baseAniListEntry.media,
+          id: 999,
+          anilistId: null,
+          myanimelistId: null,
+          title: {
+            primary: "March Comes in a Lion",
+            english: null,
+            native: null,
+          },
+          synonyms: [],
+        },
+      },
+      [
+        {
+          ...byIdMatch,
+          id: 17,
+          anilistId: null,
+          myanimelistId: null,
+          name: "March Comes in Like a Lion",
+          titles: ["March Comes in Like a Lion"],
+          normalizedTitles: ["march comes in like a lion"],
+        },
+      ]
+    )
+
+    expect(result).toBeNull()
   })
 
   it("matches JPDB entries on exact normalized titles", () => {
@@ -227,7 +260,7 @@ describe("matchAnime", () => {
           anilistId: null,
           myanimelistId: null,
           title: {
-            primary: "March Comes Like a Lion",
+            primary: "March Comes in Like a Lio",
             english: null,
             native: null,
           },
@@ -238,7 +271,7 @@ describe("matchAnime", () => {
     )
 
     expect(result?.matchReason).toBe("fuzzy")
-    expect(result?.matchScore).toBeGreaterThanOrEqual(0.82)
+    expect(result?.matchScore).toBeGreaterThanOrEqual(0.9)
   })
 
   it("rejects single-token fuzzy JPDB matches", () => {

@@ -18,6 +18,7 @@ export const mediaStatuses = [
 export const mediaStatusesAll = [...mediaStatuses, "NOT_YET_RELEASED"] as const
 
 export const sortOptions = ["status", "averageScore", "popularity"] as const
+export const subtitleAvailabilityOptions = ["all", "some", "none"] as const
 export const difficultyFilterModes = [
   "none",
   "jpdbAverageDifficulty",
@@ -36,6 +37,8 @@ export const learnNativelyJlptEquivalents = [
 export type AnimeSource = (typeof animeSources)[number]
 export type WatchStatus = (typeof watchStatuses)[number]
 export type SortOption = (typeof sortOptions)[number]
+export type SubtitleAvailabilityOption =
+  (typeof subtitleAvailabilityOptions)[number]
 export type DifficultyFilterMode = (typeof difficultyFilterModes)[number]
 export type LearnNativelyJlptEquivalent =
   (typeof learnNativelyJlptEquivalents)[number]
@@ -126,7 +129,6 @@ export type DatasetMatch<TEntry> = {
   entry: TEntry
   matchScore: number
   matchReason: MatchReason
-  isLowConfidence: boolean
 }
 
 export type LearnNativelyMatch =
@@ -144,7 +146,6 @@ export type OverlapResult = {
   matchScore: number
   matchReason: MatchReason
   isAmbiguous: boolean
-  isLowConfidence: boolean
   completeness: Completeness
   matchedJpdb?: DatasetMatch<JpdbAnimeDifficultyEntry>
   matchedLearnNatively?: LearnNativelyMatch

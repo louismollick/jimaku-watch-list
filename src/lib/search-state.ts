@@ -7,7 +7,9 @@ import {
   type MediaStatus,
   mediaStatuses,
   type SortOption,
+  type SubtitleAvailabilityOption,
   sortOptions,
+  subtitleAvailabilityOptions,
   type WatchStatus,
   watchStatuses,
 } from "@/lib/types"
@@ -20,8 +22,7 @@ export type LookupSearchState = {
   selectedStatuses: WatchStatus[]
   selectedMediaStatuses: Exclude<MediaStatus, null>[]
   selectedGenres: string[]
-  hideIncomplete: boolean
-  hideLowConfidence: boolean
+  selectedSubtitleAvailability: SubtitleAvailabilityOption[]
   difficultyFilterMode: DifficultyFilterMode
   jpdbDifficultyRange: NumericRange | null
   learnNativelyLevelRange: NumericRange | null
@@ -32,16 +33,15 @@ export type LookupSearchState = {
 export const defaultLookupSearchState: LookupSearchState = {
   source: "anilist",
   username: "",
-  selectedStatuses: [...watchStatuses],
+  selectedStatuses: ["PLANNING", "PAUSED"],
   selectedMediaStatuses: [...mediaStatuses],
   selectedGenres: [],
-  hideIncomplete: false,
-  hideLowConfidence: false,
+  selectedSubtitleAvailability: ["all"],
   difficultyFilterMode: "none",
   jpdbDifficultyRange: null,
   learnNativelyLevelRange: null,
   learnNativelyJlptRange: null,
-  sortBy: "status",
+  sortBy: "averageScore",
 }
 
 function toStringArray(value: unknown) {
@@ -67,10 +67,6 @@ function sanitizeEnumArray<TValue extends string>(
   )
 
   return nextValues.length > 0 ? nextValues : [...fallback]
-}
-
-function toBoolean(value: unknown, fallback: boolean) {
-  return typeof value === "boolean" ? value : fallback
 }
 
 function toEnum<TValue extends string>(
@@ -118,13 +114,10 @@ export function validateLookupSearch(
       defaultLookupSearchState.selectedMediaStatuses
     ),
     selectedGenres: toStringArray(search.selectedGenres),
-    hideIncomplete: toBoolean(
-      search.hideIncomplete,
-      defaultLookupSearchState.hideIncomplete
-    ),
-    hideLowConfidence: toBoolean(
-      search.hideLowConfidence,
-      defaultLookupSearchState.hideLowConfidence
+    selectedSubtitleAvailability: sanitizeEnumArray(
+      search.selectedSubtitleAvailability,
+      subtitleAvailabilityOptions,
+      defaultLookupSearchState.selectedSubtitleAvailability
     ),
     difficultyFilterMode: toEnum(
       search.difficultyFilterMode,
@@ -155,6 +148,125 @@ export function serializeGenreValues(values: Iterable<string>) {
   return [...new Set(values)]
     .filter(Boolean)
     .sort((left, right) => left.localeCompare(right))
+}
+
+function arraysEqual<TValue>(
+  left: readonly TValue[],
+  right: readonly TValue[]
+) {
+  return (
+    left.length === right.length &&
+    left.every((value, index) => value === right[index])
+  )
+}
+
+function rangesEqual(left: NumericRange | null, right: NumericRange | null) {
+  if (!left && !right) {
+    return true
+  }
+
+  if (!left || !right) {
+    return false
+  }
+
+  return left[0] === right[0] && left[1] === right[1]
+}
+
+export function canonicalizeLookupSearch(
+  search: LookupSearchState
+): Partial<LookupSearchState> {
+  const normalizedStatuses = serializeSelectedValues(
+    search.selectedStatuses,
+    watchStatuses
+  )
+  const normalizedMediaStatuses = serializeSelectedValues(
+    search.selectedMediaStatuses,
+    mediaStatuses
+  )
+  const normalizedSubtitleAvailability = serializeSelectedValues(
+    search.selectedSubtitleAvailability,
+    subtitleAvailabilityOptions
+  )
+  const normalizedGenres = serializeGenreValues(search.selectedGenres)
+  const trimmedUsername = search.username.trim()
+  const canonicalSearch: Partial<LookupSearchState> = {}
+
+  if (search.source !== defaultLookupSearchState.source) {
+    canonicalSearch.source = search.source
+  }
+
+  if (trimmedUsername) {
+    canonicalSearch.username = trimmedUsername
+  }
+
+  if (
+    !arraysEqual(normalizedStatuses, defaultLookupSearchState.selectedStatuses)
+  ) {
+    canonicalSearch.selectedStatuses = normalizedStatuses
+  }
+
+  if (
+    !arraysEqual(
+      normalizedMediaStatuses,
+      defaultLookupSearchState.selectedMediaStatuses
+    )
+  ) {
+    canonicalSearch.selectedMediaStatuses = normalizedMediaStatuses
+  }
+
+  if (normalizedGenres.length > 0) {
+    canonicalSearch.selectedGenres = normalizedGenres
+  }
+
+  if (
+    !arraysEqual(
+      normalizedSubtitleAvailability,
+      defaultLookupSearchState.selectedSubtitleAvailability
+    )
+  ) {
+    canonicalSearch.selectedSubtitleAvailability =
+      normalizedSubtitleAvailability
+  }
+
+  if (
+    search.difficultyFilterMode !==
+    defaultLookupSearchState.difficultyFilterMode
+  ) {
+    canonicalSearch.difficultyFilterMode = search.difficultyFilterMode
+  }
+
+  if (
+    !rangesEqual(
+      search.jpdbDifficultyRange,
+      defaultLookupSearchState.jpdbDifficultyRange
+    )
+  ) {
+    canonicalSearch.jpdbDifficultyRange = search.jpdbDifficultyRange
+  }
+
+  if (
+    !rangesEqual(
+      search.learnNativelyLevelRange,
+      defaultLookupSearchState.learnNativelyLevelRange
+    )
+  ) {
+    canonicalSearch.learnNativelyLevelRange = search.learnNativelyLevelRange
+  }
+
+  if (
+    !rangesEqual(
+      search.learnNativelyJlptRange,
+      defaultLookupSearchState.learnNativelyJlptRange
+    )
+  ) {
+    canonicalSearch.learnNativelyJlptRange = search.learnNativelyJlptRange
+  }
+
+  if (search.sortBy !== defaultLookupSearchState.sortBy) {
+    canonicalSearch.sortBy = search.sortBy
+  }
+
+  return canonicalSearch
 }
 
 export function hasLookupIdentity(search: LookupSearchState) {

@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router"
+import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
 import { useRef } from "react"
 import { AnimeOverlapPage } from "@/components/anime-overlap-page"
 import {
+  defaultLookupSearchState,
   getLookupIdentity,
   hasLookupIdentity,
   type LookupSearchState,
@@ -10,6 +11,9 @@ import {
 import { lookupOverlap } from "@/lib/server-functions"
 
 export const Route = createFileRoute("/")({
+  search: {
+    middlewares: [stripSearchParams(defaultLookupSearchState)],
+  },
   validateSearch: validateLookupSearch,
   component: App,
 })

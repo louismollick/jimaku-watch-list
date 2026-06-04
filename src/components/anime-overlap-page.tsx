@@ -12,7 +12,6 @@ import type { FormEvent, ReactNode } from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -64,7 +63,8 @@ import {
   mediaStatuses,
   type OverlapResult,
   type SortOption,
-  sortOptions,
+  type SubtitleAvailabilityOption,
+  subtitleAvailabilityOptions,
   type WatchStatus,
   watchStatuses,
 } from "@/lib/types"
@@ -95,6 +95,12 @@ const difficultyFilterModeLabels: Record<DifficultyFilterMode, string> = {
   jpdbAverageDifficulty: "JPDB Average Difficulty",
   learnNativelyLevel: "LearnNatively Level",
   learnNativelyJlptEquivalent: "LearnNatively JLPT Equivalent",
+}
+
+const subtitleAvailabilityLabels: Record<SubtitleAvailabilityOption, string> = {
+  all: "All episodes subtitled",
+  some: "Some episodes subtitled",
+  none: "No episodes subtitled",
 }
 
 const learnNativelyJlptDescriptions: Record<
@@ -219,6 +225,20 @@ function formatDifficultyRangeValue(mode: DifficultyFilterMode, value: number) {
   return String(value)
 }
 
+function getSubtitleAvailability(
+  result: OverlapResult
+): SubtitleAvailabilityOption {
+  if (result.matchedJimaku.fileCount === 0) {
+    return "none"
+  }
+
+  if (result.completeness === "complete") {
+    return "all"
+  }
+
+  return "some"
+}
+
 function getMediaStatusLabel(status: MediaStatus) {
   return status ? mediaStatusLabel[status] : "Unknown"
 }
@@ -264,6 +284,8 @@ function getSourceLabel(source: AnimeSource) {
 function getEntryTitle(entry: AnimeEntry) {
   return entry.media.title.primary ?? entry.media.title.english ?? "Unknown"
 }
+
+const sortSelectOptions: SortOption[] = ["averageScore", "status", "popularity"]
 
 function sortResults(results: OverlapResult[], sortBy: SortOption) {
   const nextResults = [...results]
@@ -432,9 +454,6 @@ function ResultCard({
                   </h3>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  {result.isLowConfidence ? (
-                    <WarningDot label="Low confidence match" tone="amber" />
-                  ) : null}
                   {result.completeness === "incomplete" ? (
                     <WarningDot
                       label="Incomplete Jimaku subtitles"
@@ -563,12 +582,6 @@ function ResultDialog({
                     <StatusDot result={result} />
                     <span>{statusLabel[result.entry.status]}</span>
                   </div>
-                  {result.isLowConfidence ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-400/10 px-3 py-1 text-sm text-amber-200">
-                      <WarningDot label="Low confidence match" tone="amber" />
-                      <span>Low confidence</span>
-                    </div>
-                  ) : null}
                   {result.completeness === "incomplete" ? (
                     <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-sm text-rose-200">
                       <WarningDot
@@ -846,6 +859,9 @@ export function AnimeOverlapPage({
   const selectedStatuses = new Set(activeSearchState.selectedStatuses)
   const selectedMediaStatuses = new Set(activeSearchState.selectedMediaStatuses)
   const selectedGenres = new Set(activeSearchState.selectedGenres)
+  const selectedSubtitleAvailability = new Set(
+    activeSearchState.selectedSubtitleAvailability
+  )
 
   const updateSearchState = useCallback(
     (updater: (previousState: LookupSearchState) => LookupSearchState) => {
@@ -1027,13 +1043,8 @@ export function AnimeOverlapPage({
           }
 
           if (
-            activeSearchState.hideIncomplete &&
-            result.completeness === "incomplete"
+            !selectedSubtitleAvailability.has(getSubtitleAvailability(result))
           ) {
-            return false
-          }
-
-          if (activeSearchState.hideLowConfidence && result.isLowConfidence) {
             return false
           }
 
@@ -1207,6 +1218,31 @@ export function AnimeOverlapPage({
                 <p className="text-[15px] font-semibold text-slate-200">
                   Filters
                 </p>
+
+                <div className="space-y-2">
+                  <Label className="text-[13px] font-medium text-slate-400">
+                    Japanese subtitle availability
+                  </Label>
+                  <MultiSelectCombobox
+                    ariaLabel="Japanese subtitle availability"
+                    onSelectedValuesChange={(nextSelectedValues) =>
+                      updateSearchState((previousState) => ({
+                        ...previousState,
+                        selectedSubtitleAvailability: serializeSelectedValues(
+                          nextSelectedValues as Set<SubtitleAvailabilityOption>,
+                          subtitleAvailabilityOptions
+                        ),
+                      }))
+                    }
+                    options={subtitleAvailabilityOptions.map((option) => ({
+                      label: subtitleAvailabilityLabels[option],
+                      value: option,
+                    }))}
+                    placeholder="Any"
+                    searchPlaceholder="Search subtitle availability..."
+                    selectedValues={selectedSubtitleAvailability}
+                  />
+                </div>
 
                 <div className="space-y-2">
                   <Label className="text-[13px] font-medium text-slate-400">
@@ -1401,54 +1437,6 @@ export function AnimeOverlapPage({
 
                 <div className="space-y-2">
                   <Label className="text-[13px] font-medium text-slate-400">
-                    Jimaku subtitle completeness
-                  </Label>
-                  <div className="flex items-center gap-3 text-sm text-slate-300">
-                    <Checkbox
-                      checked={activeSearchState.hideIncomplete}
-                      id="hide-incomplete"
-                      onCheckedChange={(checked) =>
-                        updateSearchState((previousState) => ({
-                          ...previousState,
-                          hideIncomplete: Boolean(checked),
-                        }))
-                      }
-                    />
-                    <Label
-                      className="text-sm font-normal text-slate-300"
-                      htmlFor="hide-incomplete"
-                    >
-                      Hide incomplete Jimaku subtitles
-                    </Label>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
-                    Match confidence
-                  </Label>
-                  <div className="flex items-center gap-3 text-sm text-slate-300">
-                    <Checkbox
-                      checked={activeSearchState.hideLowConfidence}
-                      id="hide-low-confidence"
-                      onCheckedChange={(checked) =>
-                        updateSearchState((previousState) => ({
-                          ...previousState,
-                          hideLowConfidence: Boolean(checked),
-                        }))
-                      }
-                    />
-                    <Label
-                      className="text-sm font-normal text-slate-300"
-                      htmlFor="hide-low-confidence"
-                    >
-                      Hide low confidence matches
-                    </Label>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
                     Sort by
                   </Label>
                   <Select
@@ -1467,7 +1455,7 @@ export function AnimeOverlapPage({
                       className="w-[var(--radix-select-trigger-width)]"
                       position="popper"
                     >
-                      {sortOptions.map((option) => (
+                      {sortSelectOptions.map((option) => (
                         <SelectItem key={option} value={option}>
                           {option === "status"
                             ? "Watch Status then Title"

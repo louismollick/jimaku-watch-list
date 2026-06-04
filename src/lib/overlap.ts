@@ -99,7 +99,6 @@ export function buildOverlapResults(
       matchScore: matched.matchScore,
       matchReason: matched.matchReason,
       isAmbiguous: matched.isAmbiguous,
-      isLowConfidence: matched.isLowConfidence,
       completeness: getCompleteness(entry, matched.matchedJimaku.fileCount),
       matchedJpdb: matchedJpdb ?? undefined,
       matchedLearnNatively,
