@@ -1133,11 +1133,11 @@ export function AnimeOverlapPage({
               >
                 <SelectTrigger
                   aria-label="Source"
-                  className="h-12 w-full rounded border-slate-800 bg-slate-900 text-base text-slate-100 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.9)] sm:w-44"
+                  className="h-12 w-full text-base sm:w-44"
                 >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="rounded border-slate-800 bg-slate-950 text-slate-100">
+                <SelectContent>
                   {animeSources.map((source) => (
                     <SelectItem key={source} value={source}>
                       {getSourceLabel(source)}
@@ -1148,7 +1148,7 @@ export function AnimeOverlapPage({
               <div className="relative flex-1">
                 <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
                 <Input
-                  className="h-12 rounded border-slate-800 bg-slate-900 pl-11 text-base text-slate-100 shadow-[0_18px_50px_-34px_rgba(0,0,0,0.9)] placeholder:text-slate-500"
+                  className="h-12 pl-11 text-base"
                   onChange={(event) =>
                     updateSearchState((previousState) => ({
                       ...previousState,
@@ -1297,20 +1297,16 @@ export function AnimeOverlapPage({
                   >
                     <SelectTrigger
                       aria-label="Difficulty filter"
-                      className="w-full justify-between rounded border-0 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-400 shadow-none hover:bg-slate-800 data-[size=default]:h-10 [&>svg]:text-slate-400 [&>svg]:opacity-90"
+                      className="w-full"
                     >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent
-                      className="w-[var(--radix-select-trigger-width)] overflow-hidden rounded border-slate-800 bg-slate-950 p-0 text-slate-400"
+                      className="w-[var(--radix-select-trigger-width)]"
                       position="popper"
                     >
                       {difficultyFilterModes.map((mode) => (
-                        <SelectItem
-                          className="rounded-none py-2 text-[15px] text-slate-400 focus:bg-slate-800 focus:text-slate-100 hover:text-slate-100"
-                          key={mode}
-                          value={mode}
-                        >
+                        <SelectItem key={mode} value={mode}>
                           {difficultyFilterModeLabels[mode]}
                         </SelectItem>
                       ))}
@@ -1461,22 +1457,15 @@ export function AnimeOverlapPage({
                     }
                     value={activeSearchState.sortBy}
                   >
-                    <SelectTrigger
-                      aria-label="Sort by"
-                      className="w-full justify-between rounded border-0 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-400 shadow-none hover:bg-slate-800 data-[size=default]:h-10 [&>svg]:text-slate-400 [&>svg]:opacity-90"
-                    >
+                    <SelectTrigger aria-label="Sort by" className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent
-                      className="w-[var(--radix-select-trigger-width)] overflow-hidden rounded border-slate-800 bg-slate-950 p-0 text-slate-400"
+                      className="w-[var(--radix-select-trigger-width)]"
                       position="popper"
                     >
                       {sortOptions.map((option) => (
-                        <SelectItem
-                          className="rounded-none py-2 text-[15px] text-slate-400 focus:bg-slate-800 focus:text-slate-100 hover:text-slate-100"
-                          key={option}
-                          value={option}
-                        >
+                        <SelectItem key={option} value={option}>
                           {option === "status"
                             ? "Watch Status then Title"
                             : option === "averageScore"
