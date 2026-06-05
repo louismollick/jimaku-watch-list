@@ -22,6 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { FieldLabel } from "@/components/ui/field-label"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { MultiSelectCombobox } from "@/components/ui/multi-select-combobox"
@@ -315,7 +316,7 @@ function LookupFreshness({ fetchedAt }: { fetchedAt: string }) {
       <TooltipTrigger asChild>
         <button
           aria-label="Fetch details"
-          className="inline-flex items-center gap-1.5 text-slate-400 underline decoration-slate-700 underline-offset-4 hover:text-slate-300"
+          className="inline-flex items-center gap-1.5 text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
           type="button"
         >
           <span>{formatRelativeFetchedAt(fetchedAt, now)}</span>
@@ -545,7 +546,7 @@ function SourceLogo({
 function SourceOptionLabel({ source }: { source: AnimeSource }) {
   return (
     <span className="flex items-center gap-2">
-      <SourceLogo className="size-4 shrink-0 rounded-[3px]" source={source} />
+      <SourceLogo className="size-4 shrink-0 rounded-sm" source={source} />
       <span>{getSourceLabel(source)}</span>
     </span>
   )
@@ -554,7 +555,7 @@ function SourceOptionLabel({ source }: { source: AnimeSource }) {
 function DifficultyPosterBadge({ children }: { children: ReactNode }) {
   return (
     <Badge
-      className="h-auto min-w-[108px] rounded-l-none rounded-r-md border border-slate-700/80 bg-slate-950/92 px-2.5 py-2 text-[11px] font-semibold text-slate-100 shadow-[0_12px_24px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm"
+      className="h-auto min-w-[108px] rounded-l-none rounded-r-md border border-border bg-background/90 px-2.5 py-2 text-xs font-semibold text-foreground shadow-[0_12px_24px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm"
       variant="outline"
     >
       {children}
@@ -571,9 +572,7 @@ function DifficultyBadges({ result }: { result: OverlapResult }) {
     <div className="absolute bottom-2 left-0">
       <DifficultyPosterBadge>
         <div className="flex flex-col items-start gap-1">
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
-            Difficulty
-          </span>
+          <span className="text-xs font-bold text-foreground">Difficulty</span>
           {result.matchedJpdb ? (
             <div className="flex items-center gap-1.5">
               <JpdbLogo className="size-3.5" />
@@ -655,7 +654,7 @@ function ResultCard({
           type="button"
         >
           <div className="space-y-3 transition duration-200 group-hover:-translate-y-1">
-            <div className="relative aspect-[3/4] overflow-hidden rounded bg-slate-950 shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
+            <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
               <img
                 alt={getResultTitle(result)}
                 className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
@@ -667,7 +666,7 @@ function ResultCard({
               <div className="flex items-start gap-2.5">
                 <StatusDot result={result} />
                 <div className="min-w-0 flex-1 space-y-1">
-                  <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-slate-400">
+                  <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
                     {getResultTitle(result)}
                   </h3>
                 </div>
@@ -687,78 +686,59 @@ function ResultCard({
       </TooltipTrigger>
       <TooltipContent
         align="start"
-        className="max-w-72 rounded-xl border-slate-700 bg-slate-900/96 px-4 py-3 text-sm shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)]"
+        className="max-w-72 border-border bg-popover px-4 py-3.5 text-sm shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)]"
         side="right"
         sideOffset={14}
       >
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3 text-slate-200">
+        <div className="space-y-3.5">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                Episodes
-              </p>
-              <p className="mt-1 font-medium">
+              <FieldLabel>Episodes</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
                 {result.entry.media.episodes ?? "Unknown"}
               </p>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                Jimaku Files
-              </p>
-              <p className="mt-1 font-medium">
+              <FieldLabel>Jimaku Files</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
                 {result.matchedJimaku?.fileCount ?? 0}
               </p>
             </div>
-          </div>
-          {result.matchedJpdb || result.matchedLearnNatively ? (
-            <div className="grid gap-2 text-slate-200">
-              {result.matchedJpdb ? (
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                    JPDB
-                  </span>
-                  <span className="font-medium">
-                    {result.matchedJpdb.entry.averageDifficulty}/100
-                  </span>
-                </div>
-              ) : null}
-              {result.matchedLearnNatively ? (
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-                    LearnNatively
-                  </span>
-                  <span className="font-medium">
-                    {result.matchedLearnNatively.entry.level} •{" "}
-                    {result.matchedLearnNatively.jlptEquivalent}
-                  </span>
-                </div>
-              ) : null}
+            {result.matchedJpdb ? (
+              <div>
+                <FieldLabel>JPDB</FieldLabel>
+                <p className="mt-1 font-medium text-foreground">
+                  {result.matchedJpdb.entry.averageDifficulty}/100
+                </p>
+              </div>
+            ) : null}
+            {result.matchedLearnNatively ? (
+              <div>
+                <FieldLabel>LearnNatively</FieldLabel>
+                <p className="mt-1 font-medium text-foreground">
+                  {result.matchedLearnNatively.entry.level} •{" "}
+                  {result.matchedLearnNatively.jlptEquivalent}
+                </p>
+              </div>
+            ) : null}
+            <div>
+              <FieldLabel>Airing Status</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {getMediaStatusLabel(result.entry.media.status)}
+              </p>
             </div>
-          ) : null}
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-              Airing Status
-            </p>
-            <p className="mt-1 font-medium text-slate-200">
-              {getMediaStatusLabel(result.entry.media.status)}
-            </p>
           </div>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-slate-500">
-              Genres
-            </p>
+          <div className="border-t border-border pt-3.5">
+            <FieldLabel>Genres</FieldLabel>
             <div className="mt-2 flex flex-wrap gap-1.5">
               {result.entry.media.genres.length > 0 ? (
                 result.entry.media.genres.map((genre) => (
-                  <span
-                    className="rounded-full bg-slate-800 px-2.5 py-1 text-xs text-slate-200"
-                    key={genre}
-                  >
+                  <Badge className="px-2.5" key={genre} variant="neutral">
                     {genre}
-                  </span>
+                  </Badge>
                 ))
               ) : (
-                <span className="text-slate-400">Unknown</span>
+                <span className="text-muted-foreground">Unknown</span>
               )}
             </div>
           </div>
@@ -779,11 +759,11 @@ function ResultDialog({
 }) {
   return (
     <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 shadow-[0_24px_80px_-36px_rgba(0,0,0,0.85)] sm:max-w-3xl">
+      <DialogContent className="shadow-[0_24px_80px_-36px_rgba(0,0,0,0.85)] sm:max-w-3xl">
         {result ? (
           <>
             <DialogHeader>
-              <DialogTitle className="pr-8 text-2xl text-slate-100">
+              <DialogTitle className="pr-8 text-xl">
                 {getResultTitle(result)}
               </DialogTitle>
             </DialogHeader>
@@ -791,40 +771,46 @@ function ResultDialog({
               <div>
                 <img
                   alt={getResultTitle(result)}
-                  className="aspect-[3/4] w-full rounded-2xl object-cover shadow-lg"
+                  className="aspect-[3/4] w-full rounded-lg object-cover shadow-lg"
                   src={result.entry.media.coverImage.large}
                 />
               </div>
               <div className="space-y-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-slate-800 bg-slate-900/70 px-3 py-1 text-sm text-slate-200">
+                  <Badge
+                    className="h-auto gap-2 px-3 py-1 text-sm"
+                    variant="neutral"
+                  >
                     <StatusDot result={result} />
                     <span>{statusLabel[result.entry.status]}</span>
-                  </div>
+                  </Badge>
                   {result.matchedJimaku &&
                   result.completeness === "incomplete" ? (
-                    <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/20 bg-rose-500/10 px-3 py-1 text-sm text-rose-200">
+                    <Badge
+                      className="h-auto gap-2 px-3 py-1 text-sm"
+                      variant="destructive"
+                    >
                       <WarningDot
                         label="Incomplete Jimaku subtitles"
                         tone="red"
                       />
                       <span>Incomplete Jimaku subtitles</span>
-                    </div>
+                    </Badge>
                   ) : null}
                 </div>
                 <div className="grid gap-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                      <FieldLabel>
                         {getSourceLabel(result.entry.source)}
-                      </p>
-                      <p className="text-sm font-medium text-slate-100">
+                      </FieldLabel>
+                      <p className="text-sm font-medium text-foreground">
                         {getEntryTitle(result.entry)}
                       </p>
                     </div>
                     <Button asChild size="sm" variant="outline">
                       <a
-                        className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                        className="border-border bg-background text-foreground hover:bg-accent"
                         href={result.entry.media.siteUrl}
                         rel="noreferrer"
                         target="_blank"
@@ -837,16 +823,14 @@ function ResultDialog({
                   {result.matchedJimaku ? (
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                          Jimaku
-                        </p>
-                        <p className="text-sm font-medium text-slate-100">
+                        <FieldLabel>Jimaku</FieldLabel>
+                        <p className="text-sm font-medium text-foreground">
                           {result.matchedJimaku.name}
                         </p>
                       </div>
                       <Button asChild size="sm" variant="outline">
                         <a
-                          className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                          className="border-border bg-background text-foreground hover:bg-accent"
                           href={result.matchedJimaku.url}
                           rel="noreferrer"
                           target="_blank"
@@ -858,29 +842,23 @@ function ResultDialog({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                        Jimaku
-                      </p>
-                      <p className="text-sm font-medium text-slate-100">
+                      <FieldLabel>Jimaku</FieldLabel>
+                      <p className="text-sm font-medium text-foreground">
                         No Jimaku match
                       </p>
                     </div>
                   )}
                 </div>
-                <div className="grid gap-5 text-sm text-slate-300 sm:grid-cols-2">
+                <div className="grid gap-5 text-sm text-muted-foreground sm:grid-cols-2">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                      Episodes
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                    <FieldLabel>Episodes</FieldLabel>
+                    <p className="mt-2 text-lg font-semibold text-foreground">
                       {result.entry.media.episodes ?? "Unknown"}
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                      Jimaku Files
-                    </p>
-                    <p className="mt-2 text-lg font-semibold text-slate-100">
+                    <FieldLabel>Jimaku Files</FieldLabel>
+                    <p className="mt-2 text-lg font-semibold text-foreground">
                       {result.matchedJimaku?.fileCount ?? 0}
                     </p>
                   </div>
@@ -889,10 +867,8 @@ function ResultDialog({
                   <div className="grid gap-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                          JPDB
-                        </p>
-                        <p className="text-sm font-medium text-slate-100">
+                        <FieldLabel>JPDB</FieldLabel>
+                        <p className="text-sm font-medium text-foreground">
                           Average difficulty{" "}
                           {result.matchedJpdb.entry.averageDifficulty}
                           /100
@@ -900,7 +876,7 @@ function ResultDialog({
                       </div>
                       <Button asChild size="sm" variant="outline">
                         <a
-                          className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                          className="border-border bg-background text-foreground hover:bg-accent"
                           href={result.matchedJpdb.entry.jpdbUrl}
                           rel="noreferrer"
                           target="_blank"
@@ -910,12 +886,10 @@ function ResultDialog({
                         </a>
                       </Button>
                     </div>
-                    <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
+                    <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Peak difficulty
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Peak difficulty</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {
                             result.matchedJpdb.entry
                               .peakDifficulty90thPercentile
@@ -924,45 +898,35 @@ function ResultDialog({
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Length
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Length</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedJpdb.entry.lengthInWords.toLocaleString()}{" "}
                           words
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Unique words
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Unique words</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Unique kanji
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Unique kanji</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Words used once
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Words used once</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
                           ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}
                           %)
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Unique readings
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Unique readings</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
                         </p>
                       </div>
@@ -973,13 +937,11 @@ function ResultDialog({
                   <div className="grid gap-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
-                          LearnNatively
-                        </p>
-                        <p className="text-sm font-medium text-slate-100">
+                        <FieldLabel>LearnNatively</FieldLabel>
+                        <p className="text-sm font-medium text-foreground">
                           {result.matchedLearnNatively.entry.level} •{" "}
                           {result.matchedLearnNatively.jlptEquivalent}{" "}
-                          <span className="text-slate-400">
+                          <span className="text-muted-foreground">
                             {
                               learnNativelyJlptDescriptions[
                                 result.matchedLearnNatively.jlptEquivalent
@@ -990,7 +952,7 @@ function ResultDialog({
                       </div>
                       <Button asChild size="sm" variant="outline">
                         <a
-                          className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                          className="border-border bg-background text-foreground hover:bg-accent"
                           href={
                             result.matchedLearnNatively.entry.learnnativelyUrl
                           }
@@ -1002,20 +964,16 @@ function ResultDialog({
                         </a>
                       </Button>
                     </div>
-                    <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-2">
+                    <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          Exact level
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>Exact level</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedLearnNatively.entry.level}
                         </p>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-                          JLPT equivalent
-                        </p>
-                        <p className="mt-1 font-medium text-slate-100">
+                        <FieldLabel>JLPT equivalent</FieldLabel>
+                        <p className="mt-1 font-medium text-foreground">
                           {result.matchedLearnNatively.jlptEquivalent}
                         </p>
                       </div>
@@ -1023,7 +981,7 @@ function ResultDialog({
                   </div>
                 ) : null}
                 {result.isAmbiguous && result.alternates.length > 0 ? (
-                  <div className="space-y-3 rounded-2xl border border-amber-500/20 bg-amber-400/10 p-4">
+                  <div className="space-y-3 rounded-lg border border-amber-500/20 bg-amber-400/10 p-4">
                     <div className="flex items-center gap-2 text-amber-100">
                       <TriangleAlert className="size-4" />
                       <p className="text-sm font-semibold">
@@ -1033,20 +991,20 @@ function ResultDialog({
                     <div className="space-y-2">
                       {result.alternates.map((candidate) => (
                         <div
-                          className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/80 p-3"
+                          className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/60 p-3"
                           key={candidate.jimakuEntry.id}
                         >
                           <div>
-                            <p className="text-sm font-medium text-slate-100">
+                            <p className="text-sm font-medium text-foreground">
                               {candidate.jimakuEntry.name}
                             </p>
-                            <p className="text-xs text-slate-400">
+                            <p className="text-xs text-muted-foreground">
                               Match {Math.round(candidate.score * 100)}%
                             </p>
                           </div>
                           <Button asChild size="sm" variant="outline">
                             <a
-                              className="border-slate-700 bg-slate-950 text-slate-100 hover:bg-slate-900"
+                              className="border-border bg-background text-foreground hover:bg-accent"
                               href={candidate.jimakuEntry.url}
                               rel="noreferrer"
                               target="_blank"
@@ -1386,7 +1344,7 @@ export function AnimeOverlapPage({
 
   return (
     <TooltipProvider>
-      <main className="min-h-svh bg-[linear-gradient(180deg,_#08111d_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-slate-100">
+      <main className="min-h-svh bg-[linear-gradient(180deg,_var(--background)_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-foreground">
         <section
           className={cn(
             "mx-auto flex min-h-svh w-full max-w-[1520px] flex-col px-4 py-8 sm:px-6 lg:px-8",
@@ -1399,10 +1357,10 @@ export function AnimeOverlapPage({
               hasResultsState ? "translate-y-0" : "translate-y-[38vh]"
             )}
           >
-            <h1 className="text-4xl font-semibold tracking-tight text-slate-50 sm:text-5xl">
+            <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
               Nani next?
             </h1>
-            <p className="text-base text-slate-300 sm:text-lg">
+            <p className="text-base text-muted-foreground sm:text-lg">
               Find your next anime to study japanese
             </p>
             <form
@@ -1435,7 +1393,7 @@ export function AnimeOverlapPage({
                 </SelectContent>
               </Select>
               <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   className="h-12 pl-11 text-base"
                   onChange={(event) =>
@@ -1449,7 +1407,7 @@ export function AnimeOverlapPage({
                 />
               </div>
               <Button
-                className="h-12 rounded bg-sky-500 px-6 text-sm font-semibold text-slate-950 hover:bg-sky-400"
+                className="h-12 px-6 text-sm font-semibold"
                 disabled={isPending}
                 type="submit"
               >
@@ -1467,13 +1425,13 @@ export function AnimeOverlapPage({
               </Button>
             </form>
             {lookupState && !lookupState.ok ? (
-              <div className="mx-auto flex max-w-2xl items-start gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">
+              <div className="mx-auto flex max-w-2xl items-start gap-3 rounded-lg border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">
                 <AlertCircle className="mt-0.5 size-4 shrink-0" />
                 <p>{lookupState.message}</p>
               </div>
             ) : null}
             {lookupState?.ok ? (
-              <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-slate-400">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground">
                 <span className="flex flex-wrap items-center justify-center gap-1.5">
                   <span>{lookupState.totalAnime} entries scanned</span>
                   <span aria-hidden="true">•</span>
@@ -1486,19 +1444,17 @@ export function AnimeOverlapPage({
           {hasResultsState ? (
             <div className="grid gap-6 animate-in fade-in fill-mode-both duration-500 ease-out lg:grid-cols-[260px_minmax(0,1fr)]">
               <aside className="h-fit space-y-6 pt-1">
-                <p className="text-[15px] font-semibold text-slate-200">
-                  Filters
-                </p>
+                <p className="text-sm font-semibold text-foreground">Filters</p>
 
                 <div className="space-y-2">
                   <Label
-                    className="text-[13px] font-medium text-slate-400"
+                    className="text-label text-muted-foreground"
                     htmlFor="title-filter"
                   >
                     Anime title
                   </Label>
                   <div className="relative">
-                    <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-slate-500" />
+                    <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
                       className="pl-11"
                       id="title-filter"
@@ -1515,7 +1471,7 @@ export function AnimeOverlapPage({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
+                  <Label className="text-label text-muted-foreground">
                     Japanese subtitle availability
                   </Label>
                   <MultiSelectCombobox
@@ -1540,7 +1496,7 @@ export function AnimeOverlapPage({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
+                  <Label className="text-label text-muted-foreground">
                     Watch status
                   </Label>
                   <MultiSelectCombobox
@@ -1565,7 +1521,7 @@ export function AnimeOverlapPage({
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
+                  <Label className="text-label text-muted-foreground">
                     Airing status
                   </Label>
                   <MultiSelectCombobox
@@ -1591,7 +1547,7 @@ export function AnimeOverlapPage({
 
                 {availableGenres.length > 0 ? (
                   <div className="space-y-2">
-                    <Label className="text-[13px] font-medium text-slate-400">
+                    <Label className="text-label text-muted-foreground">
                       Genres
                     </Label>
                     <MultiSelectCombobox
@@ -1616,7 +1572,7 @@ export function AnimeOverlapPage({
                 ) : null}
 
                 <div className="space-y-2">
-                  <Label className="text-[13px] font-medium text-slate-400">
+                  <Label className="text-label text-muted-foreground">
                     Difficulty filter
                   </Label>
                   <Select
@@ -1649,10 +1605,10 @@ export function AnimeOverlapPage({
 
                 {activeSearchState.difficultyFilterMode !== "none" ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-3 text-sm text-slate-300">
+                    <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                       <span>Allowed range</span>
                       {activeDifficultyBounds && activeDifficultyRange ? (
-                        <span className="font-medium text-slate-100">
+                        <span className="font-medium text-foreground">
                           {formatDifficultyRangeValue(
                             activeSearchState.difficultyFilterMode,
                             activeDifficultyRange[0]
@@ -1664,7 +1620,9 @@ export function AnimeOverlapPage({
                           )}
                         </span>
                       ) : (
-                        <span className="text-slate-500">No matched data</span>
+                        <span className="text-muted-foreground">
+                          No matched data
+                        </span>
                       )}
                     </div>
                     {activeDifficultyBounds && activeDifficultyRange ? (
@@ -1715,7 +1673,7 @@ export function AnimeOverlapPage({
                           step={1}
                           value={activeDifficultyRange}
                         />
-                        <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-slate-500">
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>
                             {formatDifficultyRangeValue(
                               activeSearchState.difficultyFilterMode,
@@ -1731,7 +1689,7 @@ export function AnimeOverlapPage({
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-slate-500">
+                      <p className="text-sm text-muted-foreground">
                         No results currently have data for this filter.
                       </p>
                     )}
@@ -1740,7 +1698,7 @@ export function AnimeOverlapPage({
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <Label className="text-[13px] font-medium text-slate-400">
+                    <Label className="text-label text-muted-foreground">
                       Sort by
                     </Label>
                     <Tabs
@@ -1803,7 +1761,7 @@ export function AnimeOverlapPage({
 
               <section className="space-y-4">
                 {lookupState?.ok ? (
-                  <div className="text-sm text-slate-400">
+                  <div className="text-sm text-muted-foreground">
                     Showing {visibleResults.length} results
                   </div>
                 ) : null}

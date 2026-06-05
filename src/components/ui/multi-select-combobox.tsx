@@ -82,24 +82,26 @@ export function MultiSelectCombobox({
         <Button
           aria-label={ariaLabel}
           aria-expanded={open}
-          className="h-auto min-h-10 w-full justify-between rounded border-slate-800 bg-slate-800/60 pr-3 pl-3.5 py-1 text-left text-[15px] font-normal whitespace-normal text-slate-100 shadow-none select-text hover:bg-slate-800 hover:text-slate-100 aria-expanded:bg-slate-800 aria-expanded:text-slate-100"
+          className="h-auto min-h-10 w-full justify-between rounded-md border-border bg-input/60 pr-3 pl-3.5 py-1 text-left text-sm font-normal whitespace-normal text-foreground shadow-none select-text hover:bg-input hover:text-foreground aria-expanded:bg-input aria-expanded:text-foreground"
           role="combobox"
           variant="outline"
         >
           <span className="flex min-w-0 flex-1 items-center">
             {showPlaceholder ? (
-              <span className="truncate text-slate-500">{placeholder}</span>
+              <span className="truncate text-muted-foreground">
+                {placeholder}
+              </span>
             ) : (
               <span className="-ml-1 flex flex-wrap gap-2">
                 {selectedOptions.map((option) => (
                   <span
-                    className="inline-flex h-8 max-w-full items-center gap-1.5 rounded bg-slate-950/45 p-2 text-[13px] text-slate-300"
+                    className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-md bg-background/50 p-2 text-sm text-foreground"
                     key={option.value}
                   >
                     <span className="truncate">{option.label}</span>
                     <span
                       aria-hidden="true"
-                      className="rounded-sm text-slate-400 transition hover:text-slate-100"
+                      className="rounded-sm text-muted-foreground transition hover:text-foreground"
                       onClick={(event) => {
                         event.preventDefault()
                         event.stopPropagation()
@@ -113,11 +115,11 @@ export function MultiSelectCombobox({
               </span>
             )}
           </span>
-          <ChevronDown className="size-4 shrink-0 self-center text-slate-500 opacity-90" />
+          <ChevronDown className="size-4 shrink-0 self-center text-muted-foreground opacity-90" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded p-0">
-        <div className="border-b border-slate-800 p-3">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+        <div className="border-b border-border p-3">
           <Input
             onChange={(event) => setQuery(event.target.value)}
             placeholder={searchPlaceholder}
@@ -131,7 +133,7 @@ export function MultiSelectCombobox({
 
               return (
                 <button
-                  className="flex w-full items-center gap-2 rounded-sm px-3 py-2 text-left text-sm text-slate-300 select-text hover:bg-slate-800 hover:text-slate-100"
+                  className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-muted-foreground select-text hover:bg-accent hover:text-accent-foreground"
                   key={option.value}
                   onClick={() => {
                     const nextSelectedValues = new Set(selectedValues)
@@ -150,9 +152,9 @@ export function MultiSelectCombobox({
                 >
                   <span
                     className={cn(
-                      "flex size-4 items-center justify-center rounded-sm border border-slate-700",
+                      "flex size-4 items-center justify-center rounded-sm border border-border",
                       isSelected
-                        ? "bg-sky-500 text-slate-950"
+                        ? "bg-primary text-primary-foreground"
                         : "bg-transparent text-transparent"
                     )}
                   >
@@ -163,7 +165,7 @@ export function MultiSelectCombobox({
               )
             })
           ) : (
-            <p className="py-6 text-center text-sm text-slate-400">
+            <p className="py-6 text-center text-sm text-muted-foreground">
               {emptyText}
             </p>
           )}
