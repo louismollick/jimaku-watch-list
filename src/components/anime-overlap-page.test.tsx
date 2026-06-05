@@ -1,6 +1,11 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import { useState } from "react"
 import { describe, expect, it, vi } from "vitest"
 import { AnimeOverlapPage } from "@/components/anime-overlap-page"
+import {
+  defaultLookupSearchState,
+  type LookupSearchState,
+} from "@/lib/search-state"
 import type { LookupResponse } from "@/lib/types"
 
 function successResponse(): LookupResponse {
@@ -9,8 +14,8 @@ function successResponse(): LookupResponse {
     source: "anilist",
     username: "mollicl",
     fetchedAt: "2026-06-02T22:14:00.000Z",
-    totalAnime: 3,
-    matchedCount: 3,
+    totalAnime: 4,
+    matchedCount: 4,
     results: [
       {
         entry: {
@@ -24,6 +29,7 @@ function successResponse(): LookupResponse {
             anilistId: 11,
             myanimelistId: 111,
             episodes: 12,
+            releasedEpisodes: 12,
             averageScore: 88,
             popularity: 15000,
             status: "FINISHED",
@@ -60,7 +66,6 @@ function successResponse(): LookupResponse {
         matchScore: 1,
         matchReason: "anilist-id",
         isAmbiguous: false,
-        isLowConfidence: false,
         completeness: "complete",
         matchedJpdb: {
           entry: {
@@ -73,24 +78,22 @@ function successResponse(): LookupResponse {
             uniqueKanji: 650,
             uniqueKanjiUsedOnce: 180,
             uniqueKanjiReadings: 920,
-            averageDifficulty: 10,
+            averageDifficulty: 25,
             peakDifficulty90thPercentile: 32,
           },
           matchScore: 0.98,
           matchReason: "exact-title",
-          isLowConfidence: false,
         },
         matchedLearnNatively: {
           entry: {
             learnnativelyUrl: "https://learnnatively.com/season/blue-box/",
             name: "Blue Box",
-            level: "L0",
+            level: "L12",
           },
           matchScore: 0.98,
           matchReason: "exact-title",
-          isLowConfidence: false,
-          jlptEquivalent: "N5",
-          levelNumber: 0,
+          jlptEquivalent: "N4",
+          levelNumber: 12,
         },
       },
       {
@@ -105,7 +108,8 @@ function successResponse(): LookupResponse {
             anilistId: 12,
             myanimelistId: 112,
             episodes: 24,
-            averageScore: 92,
+            releasedEpisodes: 24,
+            averageScore: 90,
             popularity: 45000,
             status: "FINISHED",
             genres: ["Drama", "Historical"],
@@ -141,7 +145,6 @@ function successResponse(): LookupResponse {
         matchScore: 1,
         matchReason: "anilist-id",
         isAmbiguous: false,
-        isLowConfidence: false,
         completeness: "incomplete",
         matchedJpdb: {
           entry: {
@@ -154,42 +157,41 @@ function successResponse(): LookupResponse {
             uniqueKanji: 1200,
             uniqueKanjiUsedOnce: 350,
             uniqueKanjiReadings: 1750,
-            averageDifficulty: 80,
+            averageDifficulty: 35,
             peakDifficulty90thPercentile: 96,
           },
           matchScore: 0.98,
           matchReason: "exact-title",
-          isLowConfidence: false,
         },
         matchedLearnNatively: {
           entry: {
             learnnativelyUrl: "https://learnnatively.com/season/orb/",
             name: "Orb",
-            level: "L40",
+            level: "L18",
           },
           matchScore: 0.98,
           matchReason: "exact-title",
-          isLowConfidence: false,
-          jlptEquivalent: "N1",
-          levelNumber: 40,
+          jlptEquivalent: "N3",
+          levelNumber: 18,
         },
       },
       {
         entry: {
           source: "anilist",
           id: 3,
-          status: "COMPLETED",
-          score: 80,
-          progress: 12,
+          status: "PLANNING",
+          score: 88,
+          progress: 0,
           media: {
             id: 13,
             anilistId: 13,
             myanimelistId: 113,
-            episodes: 12,
-            averageScore: 75,
-            popularity: 9000,
-            status: "RELEASING",
-            genres: ["Comedy"],
+            episodes: 24,
+            releasedEpisodes: 24,
+            averageScore: 95,
+            popularity: 55000,
+            status: "FINISHED",
+            genres: ["Drama", "Mystery"],
             format: "TV",
             siteUrl: "https://anilist.co/anime/13",
             synonyms: [],
@@ -198,59 +200,224 @@ function successResponse(): LookupResponse {
               color: "#77bc9f",
             },
             title: {
-              primary: "Low Confidence Show",
-              english: "Low Confidence Show",
-              native: "ローコンフィデンス",
+              primary: "The Apothecary Diaries",
+              english: "The Apothecary Diaries",
+              native: "薬屋のひとりごと",
             },
           },
         },
         matchedJimaku: {
           id: 103,
+          anilistId: 13,
+          myanimelistId: 113,
+          url: "https://jimaku.cc/entry/103",
+          name: "The Apothecary Diaries",
+          englishName: "The Apothecary Diaries",
+          japaneseName: "薬屋のひとりごと",
+          fileCount: 24,
+          flags: 1,
+          updatedAt: null,
+          titles: ["The Apothecary Diaries"],
+          normalizedTitles: ["the apothecary diaries"],
+        },
+        alternates: [],
+        matchScore: 1,
+        matchReason: "anilist-id",
+        isAmbiguous: false,
+        completeness: "complete",
+        matchedJpdb: {
+          entry: {
+            name: "The Apothecary Diaries",
+            jpdbUrl: "https://jpdb.io/anime/13/the-apothecary-diaries",
+            lengthInWords: 28000,
+            uniqueWords: 3200,
+            uniqueWordsUsedOnce: 1300,
+            uniqueWordsUsedOncePercent: 41,
+            uniqueKanji: 1100,
+            uniqueKanjiUsedOnce: 300,
+            uniqueKanjiReadings: 1600,
+            averageDifficulty: 80,
+            peakDifficulty90thPercentile: 95,
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+        },
+        matchedLearnNatively: {
+          entry: {
+            learnnativelyUrl:
+              "https://learnnatively.com/season/the-apothecary-diaries/",
+            name: "The Apothecary Diaries",
+            level: "L40",
+          },
+          matchScore: 0.98,
+          matchReason: "exact-title",
+          jlptEquivalent: "N1",
+          levelNumber: 40,
+        },
+      },
+      {
+        entry: {
+          source: "anilist",
+          id: 4,
+          status: "PAUSED",
+          score: 82,
+          progress: 6,
+          media: {
+            id: 14,
+            anilistId: null,
+            myanimelistId: null,
+            episodes: 12,
+            releasedEpisodes: null,
+            averageScore: 84,
+            popularity: 70000,
+            status: "RELEASING",
+            genres: ["Comedy", "Supernatural"],
+            format: "TV",
+            siteUrl: "https://anilist.co/anime/14",
+            synonyms: [],
+            coverImage: {
+              large: "https://example.com/four.jpg",
+              color: "#d15454",
+            },
+            title: {
+              primary: "Dandadan",
+              english: "Dandadan",
+              native: "ダンダダン",
+            },
+          },
+        },
+        matchedJimaku: {
+          id: 104,
           anilistId: null,
           myanimelistId: null,
-          url: "https://jimaku.cc/entry/103",
-          name: "Low Confidence Show",
-          englishName: null,
-          japaneseName: null,
+          url: "https://jimaku.cc/entry/104",
+          name: "Dandadan",
+          englishName: "Dandadan",
+          japaneseName: "ダンダダン",
           fileCount: 12,
           flags: 1,
           updatedAt: null,
-          titles: ["Low Confidence Show"],
-          normalizedTitles: ["low confidence show"],
+          titles: ["Dandadan"],
+          normalizedTitles: ["dandadan"],
         },
         alternates: [
           {
             jimakuEntry: {
-              id: 104,
+              id: 105,
               anilistId: null,
               myanimelistId: null,
-              url: "https://jimaku.cc/entry/104",
-              name: "Low Confidence Show Alt",
+              url: "https://jimaku.cc/entry/105",
+              name: "Dandadan TV",
               englishName: null,
               japaneseName: null,
               fileCount: 11,
               flags: 1,
               updatedAt: null,
-              titles: ["Low Confidence Show Alt"],
-              normalizedTitles: ["low confidence show alt"],
+              titles: ["Dandadan TV"],
+              normalizedTitles: ["dandadan tv"],
             },
-            score: 0.66,
+            score: 0.91,
             reason: "fuzzy",
           },
         ],
-        matchScore: 0.68,
+        matchScore: 0.93,
         matchReason: "fuzzy",
         isAmbiguous: true,
-        isLowConfidence: true,
-        completeness: "complete",
+        completeness: "unknown",
+        matchedJpdb: {
+          entry: {
+            name: "Dandadan",
+            jpdbUrl: "https://jpdb.io/anime/14/dandadan",
+            lengthInWords: 18000,
+            uniqueWords: 2100,
+            uniqueWordsUsedOnce: 860,
+            uniqueWordsUsedOncePercent: 41,
+            uniqueKanji: 720,
+            uniqueKanjiUsedOnce: 205,
+            uniqueKanjiReadings: 980,
+            averageDifficulty: 10,
+            peakDifficulty90thPercentile: 30,
+          },
+          matchScore: 0.93,
+          matchReason: "fuzzy",
+        },
+        matchedLearnNatively: {
+          entry: {
+            learnnativelyUrl: "https://learnnatively.com/season/dandadan/",
+            name: "Dandadan",
+            level: "L0",
+          },
+          matchScore: 0.93,
+          matchReason: "fuzzy",
+          jlptEquivalent: "N5",
+          levelNumber: 0,
+        },
+      },
+      {
+        entry: {
+          source: "anilist",
+          id: 5,
+          status: "PLANNING",
+          score: null,
+          progress: 0,
+          media: {
+            id: 15,
+            anilistId: 15,
+            myanimelistId: 115,
+            episodes: 12,
+            releasedEpisodes: 12,
+            averageScore: 65,
+            popularity: 5000,
+            status: "FINISHED",
+            genres: ["Sci-Fi"],
+            format: "TV",
+            siteUrl: "https://anilist.co/anime/15",
+            synonyms: [],
+            coverImage: {
+              large: "https://example.com/five.jpg",
+              color: "#8b8fe6",
+            },
+            title: {
+              primary: "Empty Sub Show",
+              english: "Empty Sub Show",
+              native: "字幕なし",
+            },
+          },
+        },
+        matchedJimaku: {
+          id: 106,
+          anilistId: 15,
+          myanimelistId: 115,
+          url: "https://jimaku.cc/entry/106",
+          name: "Empty Sub Show",
+          englishName: "Empty Sub Show",
+          japaneseName: "字幕なし",
+          fileCount: 0,
+          flags: 1,
+          updatedAt: null,
+          titles: ["Empty Sub Show"],
+          normalizedTitles: ["empty sub show"],
+        },
+        alternates: [],
+        matchScore: 1,
+        matchReason: "anilist-id",
+        isAmbiguous: false,
+        completeness: "incomplete",
       },
     ],
   }
 }
 
 async function selectComboboxOption(comboboxName: string, optionLabel: string) {
-  fireEvent.click(await screen.findByRole("combobox", { name: comboboxName }))
+  const combobox = await screen.findByRole("combobox", { name: comboboxName })
+  fireEvent.click(combobox)
   fireEvent.click(await screen.findByText(optionLabel))
+  fireEvent.click(combobox)
+}
+
+async function selectDropdownOption(selectName: string, optionLabel: string) {
+  fireEvent.click(await screen.findByRole("combobox", { name: selectName }))
+  fireEvent.click(await screen.findByRole("option", { name: optionLabel }))
 }
 
 function nudgeSlider(slider: HTMLElement, key: string, count = 1) {
@@ -261,36 +428,53 @@ function nudgeSlider(slider: HTMLElement, key: string, count = 1) {
   }
 }
 
+async function loadResults() {
+  const lookup = vi.fn().mockResolvedValue(successResponse())
+  render(<AnimeOverlapPage lookup={lookup} />)
+
+  fireEvent.change(screen.getByPlaceholderText("Enter username"), {
+    target: { value: "mollicl" },
+  })
+  fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+
+  await screen.findByText("Filters")
+  return lookup
+}
+
 describe("AnimeOverlapPage", () => {
-  it("loads results and supports filtering and sorting", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+  it("uses the new default filters and default sort order", async () => {
+    await loadResults()
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
-
-    await screen.findByText("3 matches")
-    expect(screen.getByText(/entries scanned/i)).toBeInTheDocument()
-    expect(screen.getByText(/fetched/i)).toBeInTheDocument()
-    expect((await screen.findAllByText("Blue Box")).length).toBeGreaterThan(0)
+    expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
+    expect(screen.queryByText("Orb")).not.toBeInTheDocument()
+    expect(screen.queryByText("Empty Sub Show")).not.toBeInTheDocument()
     expect(
-      screen.queryByText(/your anilist watch list, filtered down/i)
-    ).not.toBeInTheDocument()
-    expect(screen.queryByText(/what v1 shows/i)).not.toBeInTheDocument()
+      screen
+        .getAllByRole("heading", { level: 3 })
+        .map((heading) => heading.textContent?.trim())
+    ).toEqual(["The Apothecary Diaries"])
 
-    await selectComboboxOption("Watch status", "Planning")
-    await waitFor(() => {
-      expect(screen.queryByText("Orb")).not.toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByRole("combobox", { name: "Sort by" }))
-    fireEvent.click(screen.getByText("Average Score"))
+    await selectDropdownOption("Sort by", "Popularity")
 
     await waitFor(() => {
-      expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+      expect(
+        screen
+          .getAllByRole("heading", { level: 3 })
+          .map((heading) => heading.textContent?.trim())
+      ).toEqual(["The Apothecary Diaries"])
     })
+  })
+
+  it("renders japanese subtitle availability before watch status", async () => {
+    await loadResults()
+
+    const subtitleLabel = screen.getByText("Japanese subtitle availability")
+    const watchStatusLabel = screen.getByText("Watch status")
+
+    expect(
+      subtitleLabel.compareDocumentPosition(watchStatusLabel) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBeTruthy()
   })
 
   it("shows AniList cache details in a tooltip", async () => {
@@ -298,13 +482,7 @@ describe("AnimeOverlapPage", () => {
       .spyOn(Date, "now")
       .mockReturnValue(new Date("2026-06-02T22:26:00.000Z").getTime())
 
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
-
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+    await loadResults()
 
     const freshnessTrigger = await screen.findByRole("button", {
       name: "Fetch details",
@@ -323,39 +501,73 @@ describe("AnimeOverlapPage", () => {
     dateNowSpy.mockRestore()
   })
 
-  it("filters by airing status and genre", async () => {
+  it("does not write full difficulty bounds back into search state after lookup", async () => {
     const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+    const searchStateUpdates: LookupSearchState[] = []
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
+    function ControlledPage() {
+      const [searchState, setSearchState] = useState<LookupSearchState>({
+        ...defaultLookupSearchState,
+        username: "mollicl",
+      })
+
+      return (
+        <AnimeOverlapPage
+          lookup={lookup}
+          onSearchStateChange={(updater) =>
+            setSearchState((previousState) => {
+              const nextState = updater(previousState)
+              searchStateUpdates.push(nextState)
+              return nextState
+            })
+          }
+          searchState={searchState}
+        />
+      )
+    }
+
+    render(<ControlledPage />)
     fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
 
-    await screen.findByText("3 matches")
+    await screen.findByText("4 matches")
+
+    expect(searchStateUpdates.length).toBeGreaterThan(0)
+    expect(
+      searchStateUpdates.every(
+        (state) =>
+          state.jpdbDifficultyRange === null &&
+          state.learnNativelyLevelRange === null &&
+          state.learnNativelyJlptRange === null
+      )
+    ).toBe(true)
+  })
+
+  it("filters by airing status and genre", async () => {
+    await loadResults()
+
     await screen.findByText("Airing status")
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "Some episodes subtitled"
+    )
 
-    await selectComboboxOption("Airing status", "Releasing")
+    await selectComboboxOption("Airing status", "Finished")
     await waitFor(() => {
-      expect(screen.queryByText("Low Confidence Show")).not.toBeInTheDocument()
+      expect(
+        screen.queryByText("The Apothecary Diaries")
+      ).not.toBeInTheDocument()
     })
-    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Dandadan").length).toBeGreaterThan(0)
 
-    await selectComboboxOption("Genres", "Sports")
+    await selectComboboxOption("Genres", "Comedy")
     await waitFor(() => {
-      expect(screen.queryByText("Orb")).not.toBeInTheDocument()
+      expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
     })
-    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Dandadan").length).toBeGreaterThan(0)
   })
 
   it("does not expose not yet released as an airing status filter", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
-
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+    await loadResults()
 
     await screen.findByText("Airing status")
 
@@ -364,42 +576,31 @@ describe("AnimeOverlapPage", () => {
     expect(screen.queryByText("Not Yet Released")).not.toBeInTheDocument()
   })
 
-  it("filters out incomplete entries when hide incomplete Jimaku subtitles is enabled", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
-
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
-
-    await screen.findByText("3 matches")
-    expect((await screen.findAllByText("Orb")).length).toBeGreaterThan(0)
-
-    fireEvent.click(screen.getByLabelText("Hide incomplete Jimaku subtitles"))
+  it("filters by japanese subtitle availability", async () => {
+    await loadResults()
 
     expect(screen.queryByText("Orb")).not.toBeInTheDocument()
-    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
-  })
+    expect(screen.queryByText("Dandadan")).not.toBeInTheDocument()
+    expect(screen.queryByText("Empty Sub Show")).not.toBeInTheDocument()
 
-  it("filters out low confidence entries when hide low confidence matches is enabled", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "Some episodes subtitled"
+    )
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
+    await waitFor(() => {
+      expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Dandadan").length).toBeGreaterThan(0)
     })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
 
-    await screen.findByText("3 matches")
-    expect(
-      (await screen.findAllByText("Low Confidence Show")).length
-    ).toBeGreaterThan(0)
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "No episodes subtitled"
+    )
 
-    fireEvent.click(screen.getByLabelText("Hide low confidence matches"))
-
-    expect(screen.queryByText("Low Confidence Show")).not.toBeInTheDocument()
-    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+    await waitFor(() => {
+      expect(screen.getAllByText("Empty Sub Show").length).toBeGreaterThan(0)
+    })
   })
 
   it("shows upstream errors clearly", async () => {
@@ -421,115 +622,90 @@ describe("AnimeOverlapPage", () => {
     ).toBeInTheDocument()
   })
 
-  it("shows alternate matches in the detail dialog", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+  it("shows alternate matches in the detail dialog without low-confidence UI", async () => {
+    await loadResults()
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "Some episodes subtitled"
+    )
 
-    fireEvent.change(screen.getAllByPlaceholderText("Enter username")[0], {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
-
-    await screen.findByText("3 matches")
-    fireEvent.click((await screen.findAllByText("Low Confidence Show"))[0])
+    fireEvent.click((await screen.findAllByText("Dandadan"))[0])
 
     expect(
       await screen.findByText("Alternate Jimaku candidates")
     ).toBeInTheDocument()
-    expect(screen.getByText("Low Confidence Show Alt")).toBeInTheDocument()
-    expect(screen.getByText("Low confidence")).toBeInTheDocument()
+    expect(screen.getByText("Dandadan TV")).toBeInTheDocument()
+    expect(screen.queryByText("Low confidence")).not.toBeInTheDocument()
   })
 
   it("renders difficulty badges and modal metadata", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+    await loadResults()
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+    expect(screen.getAllByText("80/100").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("N1").length).toBeGreaterThan(0)
 
-    await screen.findByText("3 matches")
-    expect(screen.getAllByText("10/100").length).toBeGreaterThan(0)
-    expect(screen.getAllByText("N5").length).toBeGreaterThan(0)
-
-    fireEvent.click((await screen.findAllByText("Blue Box"))[0])
+    fireEvent.click((await screen.findAllByText("The Apothecary Diaries"))[0])
 
     expect(
-      await screen.findByText(/average difficulty 10\/100/i)
+      await screen.findByText(/average difficulty 80\/100/i)
     ).toBeInTheDocument()
     expect(screen.getByText("Peak difficulty")).toBeInTheDocument()
     expect(screen.getByText("Exact level")).toBeInTheDocument()
-    expect(screen.getByText("L0")).toBeInTheDocument()
+    expect(screen.getByText("L40")).toBeInTheDocument()
   })
 
-  it("filters by JPDB difficulty range and excludes unmatched difficulty entries", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+  it("filters by JPDB difficulty range and excludes higher-difficulty results", async () => {
+    await loadResults()
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "Some episodes subtitled"
+    )
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+    await selectDropdownOption("Difficulty filter", "JPDB Average Difficulty")
 
-    await screen.findByText("3 matches")
-    await selectComboboxOption("Difficulty filter", "JPDB Average Difficulty")
-
-    await waitFor(() => {
-      expect(screen.queryByText("Low Confidence Show")).not.toBeInTheDocument()
-    })
-
-    const sliders = screen.getAllByRole("slider")
+    const sliders = await screen.findAllByRole("slider")
     nudgeSlider(sliders[1], "ArrowLeft")
 
     await waitFor(() => {
-      expect(screen.queryByText("Orb")).not.toBeInTheDocument()
+      expect(
+        screen.queryByText("The Apothecary Diaries")
+      ).not.toBeInTheDocument()
     })
-    expect(screen.getAllByText("Blue Box").length).toBeGreaterThan(0)
+    expect(screen.getAllByText("Dandadan").length).toBeGreaterThan(0)
   })
 
   it("filters by LearnNatively level range", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+    await loadResults()
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
+    await selectDropdownOption("Difficulty filter", "LearnNatively Level")
 
-    await screen.findByText("3 matches")
-    await selectComboboxOption("Difficulty filter", "LearnNatively Level")
-
-    const sliders = screen.getAllByRole("slider")
+    const sliders = await screen.findAllByRole("slider")
     nudgeSlider(sliders[0], "ArrowRight")
 
     await waitFor(() => {
-      expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
+      expect(screen.queryByText("Dandadan")).not.toBeInTheDocument()
     })
-    expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText("The Apothecary Diaries").length
+    ).toBeGreaterThan(0)
   })
 
   it("filters by LearnNatively JLPT equivalent range", async () => {
-    const lookup = vi.fn().mockResolvedValue(successResponse())
-    render(<AnimeOverlapPage lookup={lookup} />)
+    await loadResults()
 
-    fireEvent.change(screen.getByPlaceholderText("Enter username"), {
-      target: { value: "mollicl" },
-    })
-    fireEvent.click(screen.getByRole("button", { name: /find overlap/i }))
-
-    await screen.findByText("3 matches")
-    await selectComboboxOption(
+    await selectDropdownOption(
       "Difficulty filter",
       "LearnNatively JLPT Equivalent"
     )
 
-    const sliders = screen.getAllByRole("slider")
+    const sliders = await screen.findAllByRole("slider")
     nudgeSlider(sliders[0], "ArrowRight")
 
     await waitFor(() => {
-      expect(screen.queryByText("Blue Box")).not.toBeInTheDocument()
+      expect(screen.queryByText("Dandadan")).not.toBeInTheDocument()
     })
-    expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
+    expect(
+      screen.getAllByText("The Apothecary Diaries").length
+    ).toBeGreaterThan(0)
   })
 })

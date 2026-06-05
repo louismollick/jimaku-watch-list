@@ -9,8 +9,7 @@ import type {
   MatchReason,
 } from "@/lib/types"
 
-const fuzzyThreshold = 0.82
-const lowConfidenceThreshold = 0.9
+const fuzzyThreshold = 0.9
 const ambiguousMargin = 0.12
 const minimumTokenOverlap = 0.6
 
@@ -39,7 +38,6 @@ type TitleMatcherResult<TEntry> = {
   matchScore: number
   matchReason: MatchReason
   isAmbiguous: boolean
-  isLowConfidence: boolean
 }
 
 type TitleMatcherOptions<TEntry> = {
@@ -53,7 +51,6 @@ type AnimeMatcher = (entry: AnimeEntry) => {
   matchScore: number
   matchReason: MatchReason
   isAmbiguous: boolean
-  isLowConfidence: boolean
 } | null
 
 const matcherCache = new WeakMap<JimakuEntry[], AnimeMatcher>()
@@ -135,8 +132,7 @@ function buildTitleMatch<TEntry>(
   alternates: TitleMatcherCandidate<TEntry>[],
   matchScore: number,
   matchReason: MatchReason,
-  isAmbiguous: boolean,
-  isLowConfidence: boolean
+  isAmbiguous: boolean
 ): TitleMatcherResult<TEntry> {
   return {
     matchedEntry,
@@ -144,7 +140,6 @@ function buildTitleMatch<TEntry>(
     matchScore,
     matchReason,
     isAmbiguous,
-    isLowConfidence,
   }
 }
 
@@ -202,7 +197,6 @@ function buildDatasetMatcher<TEntry>({
           [],
           0.98,
           "exact-title",
-          false,
           false
         )
       }
@@ -314,8 +308,7 @@ function buildDatasetMatcher<TEntry>({
       alternates,
       topCandidate.score,
       "fuzzy",
-      alternates.length > 0,
-      topCandidate.score < lowConfidenceThreshold
+      alternates.length > 0
     )
   }
 }
@@ -350,7 +343,6 @@ function buildAnimeMatcher(jimakuEntries: JimakuEntry[]): AnimeMatcher {
           matchScore: 1,
           matchReason: "anilist-id",
           isAmbiguous: false,
-          isLowConfidence: false,
         }
       }
     }
@@ -365,7 +357,6 @@ function buildAnimeMatcher(jimakuEntries: JimakuEntry[]): AnimeMatcher {
           matchScore: 1,
           matchReason: "myanimelist-id",
           isAmbiguous: false,
-          isLowConfidence: false,
         }
       }
     }
@@ -386,7 +377,6 @@ function buildAnimeMatcher(jimakuEntries: JimakuEntry[]): AnimeMatcher {
       matchScore: matched.matchScore,
       matchReason: matched.matchReason,
       isAmbiguous: matched.isAmbiguous,
-      isLowConfidence: matched.isLowConfidence,
     }
   }
 }
@@ -421,7 +411,6 @@ function toDatasetMatch<TEntry>(
     entry: matched.matchedEntry,
     matchScore: matched.matchScore,
     matchReason: matched.matchReason,
-    isLowConfidence: matched.isLowConfidence,
   }
 }
 
