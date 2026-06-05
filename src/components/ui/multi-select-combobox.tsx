@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, ChevronDown } from "lucide-react"
+import { Check, ChevronDown, X } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,18 +45,24 @@ export function MultiSelectCombobox({
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(query.trim().toLowerCase())
   )
+  const showPlaceholder =
+    selectedOptions.length === 0 ||
+    (placeholderWhenAllSelected &&
+      selectedOptions.length === options.length &&
+      options.length > 0)
 
-  let triggerLabel = placeholder
-  if (
-    placeholderWhenAllSelected &&
-    selectedOptions.length === options.length &&
-    options.length > 0
-  ) {
-    triggerLabel = placeholder
-  } else if (selectedOptions.length === 1) {
-    triggerLabel = selectedOptions[0]?.label ?? placeholder
-  } else if (selectedOptions.length > 1) {
-    triggerLabel = `${selectedOptions.length} selected`
+  function normalizeSelectedValues(nextSelectedValues: Set<string>) {
+    if (nextSelectedValues.size === 0) {
+      return new Set(options.map((option) => option.value))
+    }
+
+    return nextSelectedValues
+  }
+
+  function removeSelectedValue(value: string) {
+    const nextSelectedValues = new Set(selectedValues)
+    nextSelectedValues.delete(value)
+    onSelectedValuesChange(normalizeSelectedValues(nextSelectedValues))
   }
 
   return (
@@ -73,23 +79,38 @@ export function MultiSelectCombobox({
         <Button
           aria-label={ariaLabel}
           aria-expanded={open}
-          className="h-10 w-full justify-between rounded border-slate-800 bg-slate-800/60 px-3.5 text-left text-[15px] font-normal text-slate-100 shadow-none hover:bg-slate-800 hover:text-slate-100 aria-expanded:bg-slate-800 aria-expanded:text-slate-100"
+          className="h-auto min-h-10 w-full justify-between rounded border-slate-800 bg-slate-800/60 pr-3 pl-3.5 py-1 text-left text-[15px] font-normal whitespace-normal text-slate-100 shadow-none hover:bg-slate-800 hover:text-slate-100 aria-expanded:bg-slate-800 aria-expanded:text-slate-100"
           role="combobox"
           variant="outline"
         >
-          <span
-            className={cn(
-              "truncate",
-              (selectedOptions.length === 0 ||
-                (placeholderWhenAllSelected &&
-                  selectedOptions.length === options.length &&
-                  options.length > 0)) &&
-                "text-slate-500"
+          <span className="flex min-w-0 flex-1 items-center">
+            {showPlaceholder ? (
+              <span className="truncate text-slate-500">{placeholder}</span>
+            ) : (
+              <span className="-ml-1 flex flex-wrap gap-2">
+                {selectedOptions.map((option) => (
+                  <span
+                    className="inline-flex h-8 max-w-full items-center gap-1.5 rounded bg-slate-950/45 p-2 text-[13px] text-slate-300"
+                    key={option.value}
+                  >
+                    <span className="truncate">{option.label}</span>
+                    <span
+                      aria-hidden="true"
+                      className="rounded-sm text-slate-400 transition hover:text-slate-100"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        removeSelectedValue(option.value)
+                      }}
+                    >
+                      <X className="size-2.5" />
+                    </span>
+                  </span>
+                ))}
+              </span>
             )}
-          >
-            {triggerLabel}
           </span>
-          <ChevronDown className="size-4 shrink-0 text-slate-500 opacity-90" />
+          <ChevronDown className="size-4 shrink-0 self-center text-slate-500 opacity-90" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[var(--radix-popover-trigger-width)] rounded p-0">
@@ -118,7 +139,9 @@ export function MultiSelectCombobox({
                       nextSelectedValues.add(option.value)
                     }
 
-                    onSelectedValuesChange(nextSelectedValues)
+                    onSelectedValuesChange(
+                      normalizeSelectedValues(nextSelectedValues)
+                    )
                   }}
                   type="button"
                 >

@@ -1051,7 +1051,10 @@ export function AnimeOverlapPage({
   const visibleResults = lookupState?.ok
     ? sortResults(
         lookupState.results.filter((result) => {
-          if (!selectedStatuses.has(result.entry.status)) {
+          if (
+            selectedStatuses.size > 0 &&
+            !selectedStatuses.has(result.entry.status)
+          ) {
             return false
           }
 
@@ -1065,6 +1068,7 @@ export function AnimeOverlapPage({
           }
 
           if (
+            selectedMediaStatuses.size > 0 &&
             result.entry.media.status &&
             !selectedMediaStatuses.has(result.entry.media.status)
           ) {
@@ -1081,6 +1085,7 @@ export function AnimeOverlapPage({
           }
 
           if (
+            selectedSubtitleAvailability.size > 0 &&
             !selectedSubtitleAvailability.has(getSubtitleAvailability(result))
           ) {
             return false
@@ -1309,6 +1314,7 @@ export function AnimeOverlapPage({
                       value: option,
                     }))}
                     placeholder="Any"
+                    placeholderWhenAllSelected
                     searchPlaceholder="Search subtitle availability..."
                     selectedValues={selectedSubtitleAvailability}
                   />

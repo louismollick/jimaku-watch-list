@@ -411,7 +411,7 @@ function successResponse(): LookupResponse {
 async function selectComboboxOption(comboboxName: string, optionLabel: string) {
   const combobox = await screen.findByRole("combobox", { name: comboboxName })
   fireEvent.click(combobox)
-  fireEvent.click(await screen.findByText(optionLabel))
+  fireEvent.click(await screen.findByRole("button", { name: optionLabel }))
   fireEvent.click(combobox)
 }
 
@@ -613,6 +613,61 @@ describe("AnimeOverlapPage", () => {
     await waitFor(() => {
       expect(screen.getAllByText("Empty Sub Show").length).toBeGreaterThan(0)
     })
+  })
+
+  it("returns japanese subtitle availability to any when the last option is cleared", async () => {
+    await loadResults()
+
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "All episodes subtitled"
+    )
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Orb").length).toBeGreaterThan(0)
+      expect(screen.getAllByText("Dandadan").length).toBeGreaterThan(0)
+      expect(
+        screen.getAllByText("The Apothecary Diaries").length
+      ).toBeGreaterThan(0)
+      expect(screen.getAllByText("Empty Sub Show").length).toBeGreaterThan(0)
+    })
+
+    const combobox = screen.getByRole("combobox", {
+      name: "Japanese subtitle availability",
+    })
+
+    expect(combobox).toHaveTextContent("Any")
+
+    fireEvent.click(combobox)
+
+    expect(
+      await screen.findByRole("button", { name: "All episodes subtitled" })
+    ).toHaveTextContent("All episodes subtitled")
+    expect(
+      screen.getByRole("button", { name: "Some episodes subtitled" })
+    ).toHaveTextContent("Some episodes subtitled")
+    expect(
+      screen.getByRole("button", { name: "No episodes subtitled" })
+    ).toHaveTextContent("No episodes subtitled")
+  })
+
+  it("shows any for japanese subtitle availability when all options are selected", async () => {
+    await loadResults()
+
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "Some episodes subtitled"
+    )
+    await selectComboboxOption(
+      "Japanese subtitle availability",
+      "No episodes subtitled"
+    )
+
+    expect(
+      screen.getByRole("combobox", {
+        name: "Japanese subtitle availability",
+      })
+    ).toHaveTextContent("Any")
   })
 
   it("filters by english or romanized title query", async () => {

@@ -53,4 +53,16 @@ describe("search-state", () => {
       selectedSubtitleAvailability: ["some"],
     })
   })
+
+  it("coerces explicit empty multi-select filters back to defaults", () => {
+    expect(
+      validateLookupSearch({
+        selectedStatuses: [],
+        selectedMediaStatuses: [],
+        selectedSubtitleAvailability: [],
+      })
+    ).toEqual({
+      ...defaultLookupSearchState,
+    })
+  })
 })
