@@ -1,14 +1,11 @@
 import { createFileRoute, stripSearchParams } from "@tanstack/react-router"
-import { useRef } from "react"
-import { AnimeOverlapPage } from "@/components/anime-overlap-page"
+import { AnimeListRoute } from "@/features/anime-list/components/anime-list-route"
+import { lookupAnimeList } from "@/features/anime-list/server/lookup-anime-list"
 import {
   defaultLookupSearchState,
-  getLookupIdentity,
-  hasLookupIdentity,
   type LookupSearchState,
   validateLookupSearch,
 } from "@/lib/search-state"
-import { lookupOverlap } from "@/lib/server-functions"
 
 export const Route = createFileRoute("/")({
   search: {
@@ -21,14 +18,10 @@ export const Route = createFileRoute("/")({
 function App() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const initialAutoLookupIdentity = useRef(
-    hasLookupIdentity(search) ? getLookupIdentity(search) : null
-  )
 
   return (
-    <AnimeOverlapPage
-      autoLookupIdentity={initialAutoLookupIdentity.current}
-      lookup={lookupOverlap}
+    <AnimeListRoute
+      lookup={lookupAnimeList}
       onSearchStateChange={(updater) =>
         navigate({
           replace: true,
