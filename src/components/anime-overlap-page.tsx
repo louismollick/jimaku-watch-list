@@ -596,7 +596,7 @@ function PlatformLinks({
 
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-2.5">
-      <div className="flex flex-col gap-1.5 opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+      <div className="flex origin-top transform-gpu flex-col gap-1.5 opacity-0 scale-[0.95] transition-[opacity,transform] duration-200 ease-out group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100">
         {links.map((link) => (
           <a
             className="pointer-events-auto flex h-9 items-center gap-2 rounded-md border border-border/80 bg-card/86 px-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-accent/92 focus-visible:bg-accent/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
