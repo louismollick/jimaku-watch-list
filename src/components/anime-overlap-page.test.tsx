@@ -1352,6 +1352,9 @@ describe("AnimeOverlapPage", () => {
       "href",
       "https://learnnatively.com/season/the-apothecary-diaries/"
     )
+    expect(
+      apothecaryLinks.getByRole("link", { name: /anilist/i }).parentElement
+    ).toHaveClass("pointer-events-auto")
 
     const apothecaryPoster = screen
       .getByAltText("The Apothecary Diaries")
