@@ -1255,7 +1255,7 @@ export function AnimeOverlapPage({
                 alt=""
                 aria-hidden="true"
                 className={cn(
-                  "object-contain transition-all duration-700 ease-out",
+                  "object-contain transition-opacity duration-700 ease-out",
                   hasResultsState
                     ? "mr-0 size-24 opacity-100 sm:size-28"
                     : "mr-[-0.5rem] size-0 opacity-0"
