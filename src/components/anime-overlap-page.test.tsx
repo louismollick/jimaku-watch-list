@@ -14,6 +14,21 @@ import {
 } from "@/lib/search-state"
 import type { LookupResponse } from "@/lib/types"
 
+function mockViewport({ isMobile }: { isMobile: boolean }) {
+  return vi.spyOn(window, "matchMedia").mockImplementation((query: string) => ({
+    matches: isMobile && query === "(max-width: 1023px)",
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent() {
+      return false
+    },
+  }))
+}
+
 function successResponse(): LookupResponse {
   return {
     ok: true,
@@ -1281,6 +1296,32 @@ describe("AnimeOverlapPage", () => {
 
     expect(screen.queryByText("Alternate Jimaku candidates")).toBeNull()
     expect(screen.queryByText("Dandadan TV")).toBeNull()
+  })
+
+  it("opens a mobile drawer with actions and metadata on card tap", async () => {
+    const viewportMock = mockViewport({ isMobile: true })
+
+    await loadResults()
+
+    fireEvent.click((await screen.findAllByText("The Apothecary Diaries"))[0])
+
+    const drawer = await screen.findByRole("dialog")
+
+    expect(within(drawer).getByText("The Apothecary Diaries")).toBeVisible()
+    expect(
+      within(drawer).getByRole("link", { name: /anilist/i })
+    ).toHaveAttribute("href", "https://anilist.co/anime/13")
+    expect(
+      within(drawer).getByRole("link", { name: /jimaku/i })
+    ).toHaveAttribute("href", "https://jimaku.cc/entry/103")
+    expect(within(drawer).getByText("Average difficulty")).toBeVisible()
+    expect(within(drawer).getByText("Peak difficulty")).toBeVisible()
+    expect(within(drawer).getAllByText("LearnNatively").length).toBeGreaterThan(
+      0
+    )
+    expect(within(drawer).getByText("Genres")).toBeVisible()
+
+    viewportMock.mockRestore()
   })
 
   it("renders difficulty badges and expanded hover metadata", async () => {

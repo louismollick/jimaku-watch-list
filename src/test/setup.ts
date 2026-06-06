@@ -21,3 +21,19 @@ Object.defineProperty(window, "ResizeObserver", {
   configurable: true,
   value: ResizeObserverMock,
 })
+
+Object.defineProperty(window, "matchMedia", {
+  configurable: true,
+  value: (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent() {
+      return false
+    },
+  }),
+})

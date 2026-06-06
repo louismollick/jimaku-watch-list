@@ -11,6 +11,17 @@ dist-ssr
 __unconfig*
 todos.json
 
+# playwright
+.playwright-cli/
+playwright-report/
+blob-report/
+test-results/
+playwright/.auth/
+playwright/.cache/
+playwright/.tmp/
+*.playwright-report
+*.playwright-trace
+
 # typescript
 *.tsbuildinfo
 .vercel

@@ -15,6 +15,13 @@ import type {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer"
 import { FieldLabel } from "@/components/ui/field-label"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -544,19 +551,7 @@ type PlatformLinkDescriptor = {
   icon: ReactNode
 }
 
-function PlatformLinks({
-  onBlur,
-  onFocus,
-  onPointerEnter,
-  onPointerLeave,
-  result,
-}: {
-  onBlur: (event: React.FocusEvent<HTMLAnchorElement>) => void
-  onFocus: () => void
-  onPointerEnter: () => void
-  onPointerLeave: () => void
-  result: OverlapResult
-}) {
+function getPlatformLinks(result: OverlapResult): PlatformLinkDescriptor[] {
   const links: PlatformLinkDescriptor[] = [
     {
       href: result.entry.media.siteUrl,
@@ -594,26 +589,68 @@ function PlatformLinks({
     })
   }
 
+  return links
+}
+
+function PlatformActionLinks({
+  links,
+  onBlur,
+  onFocus,
+  onPointerEnter,
+  onPointerLeave,
+}: {
+  links: PlatformLinkDescriptor[]
+  onBlur?: (event: React.FocusEvent<HTMLAnchorElement>) => void
+  onFocus?: () => void
+  onPointerEnter?: () => void
+  onPointerLeave?: () => void
+}) {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-2.5">
+    <>
+      {links.map((link) => (
+        <a
+          className="flex h-9 items-center gap-2 rounded-md border border-border bg-card px-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
+          href={link.href}
+          key={link.label}
+          onBlur={onBlur}
+          onFocus={onFocus}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+          rel="noreferrer"
+          target="_blank"
+        >
+          {link.icon}
+          <span className="min-w-0 flex-1 truncate">{link.label}</span>
+          <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
+        </a>
+      ))}
+    </>
+  )
+}
+
+function PlatformLinks({
+  onBlur,
+  onFocus,
+  onPointerEnter,
+  onPointerLeave,
+  result,
+}: {
+  onBlur: (event: React.FocusEvent<HTMLAnchorElement>) => void
+  onFocus: () => void
+  onPointerEnter: () => void
+  onPointerLeave: () => void
+  result: OverlapResult
+}) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 hidden p-2.5 lg:block">
       <div className="flex origin-top transform-gpu flex-col gap-1.5 opacity-0 scale-[0.95] transition-[opacity,transform] duration-200 ease-out group-hover:opacity-100 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:scale-100">
-        {links.map((link) => (
-          <a
-            className="pointer-events-auto flex h-9 items-center gap-2 rounded-md border border-border/80 bg-card/86 px-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-accent/92 focus-visible:bg-accent/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
-            href={link.href}
-            key={link.label}
-            onBlur={onBlur}
-            onFocus={onFocus}
-            onPointerEnter={onPointerEnter}
-            onPointerLeave={onPointerLeave}
-            rel="noreferrer"
-            target="_blank"
-          >
-            {link.icon}
-            <span className="min-w-0 flex-1 truncate">{link.label}</span>
-            <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
-          </a>
-        ))}
+        <PlatformActionLinks
+          links={getPlatformLinks(result)}
+          onBlur={onBlur}
+          onFocus={onFocus}
+          onPointerEnter={onPointerEnter}
+          onPointerLeave={onPointerLeave}
+        />
       </div>
     </div>
   )
@@ -647,10 +684,110 @@ function DifficultyBadges({ result }: { result: OverlapResult }) {
   )
 }
 
+function ResultMetadata({ result }: { result: OverlapResult }) {
+  return (
+    <div className="space-y-3.5">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+        <div>
+          <FieldLabel>Episodes</FieldLabel>
+          <p className="mt-1 font-medium text-foreground">
+            {result.entry.media.episodes ?? "Unknown"}
+          </p>
+        </div>
+        <div>
+          <FieldLabel>Jimaku Files</FieldLabel>
+          <p className="mt-1 font-medium text-foreground">
+            {result.matchedJimaku?.fileCount ?? 0}
+          </p>
+        </div>
+        {result.matchedJpdb ? (
+          <>
+            <div>
+              <FieldLabel>Average difficulty</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.averageDifficulty}/100
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Peak difficulty</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.peakDifficulty90thPercentile}/100
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Length</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.lengthInWords.toLocaleString()} words
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Unique words</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Unique kanji</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Words used once</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
+                ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}%)
+              </p>
+            </div>
+            <div>
+              <FieldLabel>Unique readings</FieldLabel>
+              <p className="mt-1 font-medium text-foreground">
+                {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
+              </p>
+            </div>
+          </>
+        ) : null}
+        {result.matchedLearnNatively ? (
+          <div>
+            <FieldLabel>LearnNatively</FieldLabel>
+            <p className="mt-1 font-medium text-foreground">
+              {result.matchedLearnNatively.entry.level} •{" "}
+              {result.matchedLearnNatively.jlptEquivalent}
+            </p>
+          </div>
+        ) : null}
+        <div>
+          <FieldLabel>Airing Status</FieldLabel>
+          <p className="mt-1 font-medium text-foreground">
+            {getMediaStatusLabel(result.entry.media.status)}
+          </p>
+        </div>
+      </div>
+      <div className="border-t border-border pt-3.5">
+        <FieldLabel>Genres</FieldLabel>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {result.entry.media.genres.length > 0 ? (
+            result.entry.media.genres.map((genre) => (
+              <Badge className="px-2.5" key={genre} variant="neutral">
+                {genre}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-muted-foreground">Unknown</span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function ResultCard({ result }: { result: OverlapResult }) {
   const hoverTargetRef = useRef<HTMLButtonElement | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
   const [tooltipSide, setTooltipSide] = useState<"left" | "right">("right")
+  const [isMobileViewport, setIsMobileViewport] = useState(false)
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const platformLinks = getPlatformLinks(result)
 
   const syncTooltipSide = useCallback(() => {
     const hoverTarget = hoverTargetRef.current
@@ -698,6 +835,28 @@ function ResultCard({ result }: { result: OverlapResult }) {
   }, [syncTooltipSide])
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 1023px)")
+    const syncViewport = () => {
+      const nextIsMobile = mediaQuery.matches
+
+      setIsMobileViewport(nextIsMobile)
+
+      if (nextIsMobile) {
+        setIsTooltipOpen(false)
+      } else {
+        setIsDrawerOpen(false)
+      }
+    }
+
+    syncViewport()
+    mediaQuery.addEventListener("change", syncViewport)
+
+    return () => {
+      mediaQuery.removeEventListener("change", syncViewport)
+    }
+  }, [])
+
+  useEffect(() => {
     const handleViewportChange = () => {
       syncTooltipHoverState()
     }
@@ -715,7 +874,7 @@ function ResultCard({ result }: { result: OverlapResult }) {
   }, [syncTooltipHoverState])
 
   const handlePointerUpdate = (event: ReactPointerEvent<HTMLElement>) => {
-    if (event.pointerType === "touch") {
+    if (event.pointerType === "touch" || isMobileViewport) {
       return
     }
 
@@ -732,172 +891,111 @@ function ResultCard({ result }: { result: OverlapResult }) {
   }
 
   return (
-    <div
-      className={cn(
-        "group relative h-full w-full",
-        isTooltipOpen ? "z-30" : "z-0"
-      )}
-      data-result-card
-    >
-      <button
-        aria-describedby={`result-card-tooltip-${result.entry.source}-${result.entry.id}`}
-        className="h-full w-full text-left select-text"
-        onBlur={() => setIsTooltipOpen(false)}
-        onFocus={() => {
-          syncTooltipSide()
-          setIsTooltipOpen(true)
-        }}
-        onPointerLeave={() => setIsTooltipOpen(false)}
-        ref={hoverTargetRef}
-        type="button"
+    <Drawer onOpenChange={setIsDrawerOpen} open={isDrawerOpen}>
+      <div
+        className={cn(
+          "group relative h-full w-full",
+          isTooltipOpen ? "z-30" : "z-0"
+        )}
+        data-result-card
       >
-        <div
-          className="space-y-3"
-          onPointerEnter={handlePointerUpdate}
-          onPointerLeave={() => setIsTooltipOpen(false)}
-          onPointerMove={handlePointerUpdate}
-        >
-          <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
-            <img
-              alt={getResultTitle(result)}
-              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-              src={result.entry.media.coverImage.large}
-            />
-            <DifficultyBadges result={result} />
-          </div>
-          <div className="space-y-3 px-0.5">
-            <div className="flex items-start gap-2.5">
-              <StatusDot result={result} />
-              <div className="min-w-0 flex-1 space-y-1">
-                <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
-                  {getResultTitle(result)}
-                </h3>
-              </div>
-              <div className="flex shrink-0 items-center gap-1.5">
-                {result.matchedJimaku &&
-                result.completeness === "incomplete" ? (
-                  <WarningDot label="Incomplete Jimaku subtitles" tone="red" />
-                ) : null}
-              </div>
-            </div>
-          </div>
-        </div>
-      </button>
-      {isTooltipOpen ? (
-        <div
-          className="pointer-events-none absolute top-0 hidden w-80 animate-in zoom-in-[0.98] rounded-lg border border-border bg-popover px-4 py-3.5 text-sm text-popover-foreground shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)] duration-400 lg:block"
-          id={`result-card-tooltip-${result.entry.source}-${result.entry.id}`}
-          role="tooltip"
-          style={
-            tooltipSide === "right"
-              ? { left: `calc(100% + ${resultCardTooltipGap}px)` }
-              : { right: `calc(100% + ${resultCardTooltipGap}px)` }
+        <button
+          aria-describedby={
+            isMobileViewport
+              ? undefined
+              : `result-card-tooltip-${result.entry.source}-${result.entry.id}`
           }
+          className="h-full w-full text-left select-text"
+          onBlur={() => setIsTooltipOpen(false)}
+          onClick={() => {
+            if (isMobileViewport) {
+              setIsDrawerOpen(true)
+            }
+          }}
+          onFocus={() => {
+            if (isMobileViewport) {
+              return
+            }
+
+            syncTooltipSide()
+            setIsTooltipOpen(true)
+          }}
+          onPointerLeave={() => setIsTooltipOpen(false)}
+          ref={hoverTargetRef}
+          type="button"
         >
-          <div className="space-y-3.5">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              <div>
-                <FieldLabel>Episodes</FieldLabel>
-                <p className="mt-1 font-medium text-foreground">
-                  {result.entry.media.episodes ?? "Unknown"}
-                </p>
-              </div>
-              <div>
-                <FieldLabel>Jimaku Files</FieldLabel>
-                <p className="mt-1 font-medium text-foreground">
-                  {result.matchedJimaku?.fileCount ?? 0}
-                </p>
-              </div>
-              {result.matchedJpdb ? (
-                <>
-                  <div>
-                    <FieldLabel>Average difficulty</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.averageDifficulty}/100
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Peak difficulty</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.peakDifficulty90thPercentile}
-                      /100
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Length</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.lengthInWords.toLocaleString()}{" "}
-                      words
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Unique words</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Unique kanji</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Words used once</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
-                      ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}%)
-                    </p>
-                  </div>
-                  <div>
-                    <FieldLabel>Unique readings</FieldLabel>
-                    <p className="mt-1 font-medium text-foreground">
-                      {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
-                    </p>
-                  </div>
-                </>
-              ) : null}
-              {result.matchedLearnNatively ? (
-                <div>
-                  <FieldLabel>LearnNatively</FieldLabel>
-                  <p className="mt-1 font-medium text-foreground">
-                    {result.matchedLearnNatively.entry.level} •{" "}
-                    {result.matchedLearnNatively.jlptEquivalent}
-                  </p>
-                </div>
-              ) : null}
-              <div>
-                <FieldLabel>Airing Status</FieldLabel>
-                <p className="mt-1 font-medium text-foreground">
-                  {getMediaStatusLabel(result.entry.media.status)}
-                </p>
-              </div>
+          <div
+            className="space-y-3"
+            onPointerEnter={handlePointerUpdate}
+            onPointerLeave={() => setIsTooltipOpen(false)}
+            onPointerMove={handlePointerUpdate}
+          >
+            <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
+              <img
+                alt={getResultTitle(result)}
+                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+                src={result.entry.media.coverImage.large}
+              />
+              <DifficultyBadges result={result} />
             </div>
-            <div className="border-t border-border pt-3.5">
-              <FieldLabel>Genres</FieldLabel>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {result.entry.media.genres.length > 0 ? (
-                  result.entry.media.genres.map((genre) => (
-                    <Badge className="px-2.5" key={genre} variant="neutral">
-                      {genre}
-                    </Badge>
-                  ))
-                ) : (
-                  <span className="text-muted-foreground">Unknown</span>
-                )}
+            <div className="space-y-3 px-0.5">
+              <div className="flex items-start gap-2.5">
+                <StatusDot result={result} />
+                <div className="min-w-0 flex-1 space-y-1">
+                  <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
+                    {getResultTitle(result)}
+                  </h3>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {result.matchedJimaku &&
+                  result.completeness === "incomplete" ? (
+                    <WarningDot
+                      label="Incomplete Jimaku subtitles"
+                      tone="red"
+                    />
+                  ) : null}
+                </div>
               </div>
             </div>
           </div>
+        </button>
+        {isTooltipOpen && !isMobileViewport ? (
+          <div
+            className="pointer-events-none absolute top-0 hidden w-80 animate-in zoom-in-[0.98] rounded-lg border border-border bg-popover px-4 py-3.5 text-sm text-popover-foreground shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)] duration-400 lg:block"
+            id={`result-card-tooltip-${result.entry.source}-${result.entry.id}`}
+            role="tooltip"
+            style={
+              tooltipSide === "right"
+                ? { left: `calc(100% + ${resultCardTooltipGap}px)` }
+                : { right: `calc(100% + ${resultCardTooltipGap}px)` }
+            }
+          >
+            <ResultMetadata result={result} />
+          </div>
+        ) : null}
+        <PlatformLinks
+          onBlur={handleLinkBlur}
+          onFocus={() => setIsTooltipOpen(true)}
+          onPointerEnter={() => setIsTooltipOpen(true)}
+          onPointerLeave={() => setIsTooltipOpen(false)}
+          result={result}
+        />
+      </div>
+      <DrawerContent aria-describedby={undefined} className="lg:hidden">
+        <DrawerHeader>
+          <DrawerTitle>{getResultTitle(result)}</DrawerTitle>
+          <DrawerDescription className="sr-only">
+            External links and detailed anime metadata.
+          </DrawerDescription>
+        </DrawerHeader>
+        <div className="grid gap-2">
+          <PlatformActionLinks links={platformLinks} />
         </div>
-      ) : null}
-      <PlatformLinks
-        onBlur={handleLinkBlur}
-        onFocus={() => setIsTooltipOpen(true)}
-        onPointerEnter={() => setIsTooltipOpen(true)}
-        onPointerLeave={() => setIsTooltipOpen(false)}
-        result={result}
-      />
-    </div>
+        <div className="overflow-y-auto pb-1">
+          <ResultMetadata result={result} />
+        </div>
+      </DrawerContent>
+    </Drawer>
   )
 }
 
@@ -1273,63 +1371,67 @@ export function AnimeOverlapPage({
               Find your next anime to study japanese
             </p>
             <form
-              className="mx-auto flex max-w-2xl flex-col gap-3 sm:flex-row"
+              className="mx-auto flex w-full max-w-2xl flex-col gap-3 sm:flex-row"
               onSubmit={handleSubmit}
             >
-              <Select
-                onValueChange={(value) =>
-                  updateSearchState((previousState) => ({
-                    ...previousState,
-                    source: value as AnimeSource,
-                  }))
-                }
-                value={activeSearchState.source}
-              >
-                <SelectTrigger
-                  aria-label="Source"
-                  className="h-12 w-full text-base data-[size=default]:h-12 sm:w-44"
-                >
-                  <SelectValue>
-                    <SourceOptionLabel source={activeSearchState.source} />
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {animeSources.map((source) => (
-                    <SelectItem key={source} value={source}>
-                      <SourceOptionLabel source={source} />
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  className="h-12 pl-11 text-base"
-                  onChange={(event) =>
+              <div className="w-full sm:w-44">
+                <Select
+                  onValueChange={(value) =>
                     updateSearchState((previousState) => ({
                       ...previousState,
-                      username: event.target.value,
+                      source: value as AnimeSource,
                     }))
                   }
-                  placeholder="Enter username"
-                  value={activeSearchState.username}
-                />
+                  value={activeSearchState.source}
+                >
+                  <SelectTrigger
+                    aria-label="Source"
+                    className="h-12 w-full text-base data-[size=default]:h-12"
+                  >
+                    <SelectValue>
+                      <SourceOptionLabel source={activeSearchState.source} />
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {animeSources.map((source) => (
+                      <SelectItem key={source} value={source}>
+                        <SourceOptionLabel source={source} />
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <Button
-                aria-label={isPending ? "Searching" : "Find overlap"}
-                className="h-12 px-6 text-sm font-semibold"
-                disabled={isPending}
-                type="submit"
-              >
-                {isPending ? (
-                  <>
-                    <LoaderCircle className="animate-spin" />
-                    Searching
-                  </>
-                ) : (
-                  <ArrowRight />
-                )}
-              </Button>
+              <div className="flex w-full gap-3 sm:contents">
+                <div className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    className="h-12 pl-11 text-base"
+                    onChange={(event) =>
+                      updateSearchState((previousState) => ({
+                        ...previousState,
+                        username: event.target.value,
+                      }))
+                    }
+                    placeholder="Enter username"
+                    value={activeSearchState.username}
+                  />
+                </div>
+                <Button
+                  aria-label={isPending ? "Searching" : "Find overlap"}
+                  className="h-12 shrink-0 px-6 text-sm font-semibold"
+                  disabled={isPending}
+                  type="submit"
+                >
+                  {isPending ? (
+                    <>
+                      <LoaderCircle className="animate-spin" />
+                      Searching
+                    </>
+                  ) : (
+                    <ArrowRight />
+                  )}
+                </Button>
+              </div>
             </form>
             {lookupState && !lookupState.ok ? (
               <div className="mx-auto flex max-w-2xl items-start gap-3 rounded-lg border border-rose-500/25 bg-rose-500/10 p-4 text-sm text-rose-200">
