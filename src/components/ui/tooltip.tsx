@@ -24,6 +24,8 @@ function TooltipTrigger({
 function TooltipContent({
   className,
   sideOffset = 6,
+  sticky = "always",
+  updatePositionStrategy = "always",
   ...props
 }: React.ComponentProps<typeof TooltipPrimitive.Content>) {
   return (
@@ -35,6 +37,8 @@ function TooltipContent({
         )}
         data-slot="tooltip-content"
         sideOffset={sideOffset}
+        sticky={sticky}
+        updatePositionStrategy={updatePositionStrategy}
         {...props}
       />
     </TooltipPrimitive.Portal>

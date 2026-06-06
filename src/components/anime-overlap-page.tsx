@@ -1,12 +1,11 @@
 import { useServerFn } from "@tanstack/react-start"
 import {
   AlertCircle,
+  ArrowRight,
   ExternalLink,
   Info,
   LoaderCircle,
   Search,
-  Sparkles,
-  TriangleAlert,
 } from "lucide-react"
 import type {
   FormEvent,
@@ -16,12 +15,6 @@ import type {
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { FieldLabel } from "@/components/ui/field-label"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -101,6 +94,10 @@ const absoluteTimeFormatter = new Intl.DateTimeFormat(undefined, {
   timeStyle: "short",
 })
 
+const resultCardTooltipGap = 14
+const resultCardTooltipWidth = 320
+const viewportTooltipPadding = 16
+
 const difficultyFilterModeLabels: Record<DifficultyFilterMode, string> = {
   none: "No difficulty filter",
   jpdbAverageDifficulty: "JPDB Average Difficulty",
@@ -112,18 +109,6 @@ const subtitleAvailabilityLabels: Record<SubtitleAvailabilityOption, string> = {
   all: "All episodes subtitled",
   some: "Some episodes subtitled",
   none: "No episodes subtitled",
-}
-
-const learnNativelyJlptDescriptions: Record<
-  LearnNativelyJlptEquivalent,
-  string
-> = {
-  "N1+": "~JLPT N1+",
-  N1: "~JLPT N1",
-  N2: "~JLPT N2",
-  N3: "~JLPT N3",
-  N4: "~JLPT N4",
-  N5: "~JLPT N5",
 }
 
 function formatRelativeFetchedAt(value: string, now: number) {
@@ -501,6 +486,17 @@ function LearnNativelyLogo({ className }: { className?: string }) {
   )
 }
 
+function JimakuLogo({ className }: { className?: string }) {
+  return (
+    <img
+      alt=""
+      aria-hidden="true"
+      className={className}
+      src="/jimaku-favicon.ico"
+    />
+  )
+}
+
 function SourceLogo({
   source,
   className,
@@ -534,11 +530,92 @@ function SourceOptionLabel({ source }: { source: AnimeSource }) {
 function DifficultyPosterBadge({ children }: { children: ReactNode }) {
   return (
     <Badge
-      className="h-auto min-w-[108px] rounded-l-none rounded-r-md border border-border bg-background/90 px-2.5 py-2 text-xs font-semibold text-foreground shadow-[0_12px_24px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm"
+      className="h-auto min-w-[90px] rounded-l-none rounded-r-md border border-border bg-background/90 px-2.5 py-2 text-xs font-semibold text-foreground shadow-[0_12px_24px_-16px_rgba(0,0,0,0.9)] backdrop-blur-sm"
       variant="outline"
     >
       {children}
     </Badge>
+  )
+}
+
+type PlatformLinkDescriptor = {
+  href: string
+  label: string
+  icon: ReactNode
+}
+
+function PlatformLinks({
+  onBlur,
+  onFocus,
+  onPointerEnter,
+  onPointerLeave,
+  result,
+}: {
+  onBlur: (event: React.FocusEvent<HTMLAnchorElement>) => void
+  onFocus: () => void
+  onPointerEnter: () => void
+  onPointerLeave: () => void
+  result: OverlapResult
+}) {
+  const links: PlatformLinkDescriptor[] = [
+    {
+      href: result.entry.media.siteUrl,
+      label: getSourceLabel(result.entry.source),
+      icon: (
+        <SourceLogo
+          className="size-4 shrink-0 rounded-sm"
+          source={result.entry.source}
+        />
+      ),
+    },
+  ]
+
+  if (result.matchedJimaku) {
+    links.push({
+      href: result.matchedJimaku.url,
+      label: "Jimaku",
+      icon: <JimakuLogo className="size-4 shrink-0" />,
+    })
+  }
+
+  if (result.matchedJpdb) {
+    links.push({
+      href: result.matchedJpdb.entry.jpdbUrl,
+      label: "JPDB",
+      icon: <JpdbLogo className="size-4 shrink-0 rounded-sm" />,
+    })
+  }
+
+  if (result.matchedLearnNatively) {
+    links.push({
+      href: result.matchedLearnNatively.entry.learnnativelyUrl,
+      label: "LearnNatively",
+      icon: <LearnNativelyLogo className="size-4 shrink-0 rounded-sm" />,
+    })
+  }
+
+  return (
+    <div className="pointer-events-none absolute inset-x-0 top-0 z-10 p-2.5">
+      <div className="flex flex-col gap-1.5 opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+        {links.map((link) => (
+          <a
+            className="pointer-events-auto flex h-9 items-center gap-2 rounded-md border border-border/80 bg-card/86 px-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-accent/92 focus-visible:bg-accent/92 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/25"
+            href={link.href}
+            key={link.label}
+            onBlur={onBlur}
+            onFocus={onFocus}
+            onPointerEnter={onPointerEnter}
+            onPointerLeave={onPointerLeave}
+            rel="noreferrer"
+            target="_blank"
+          >
+            {link.icon}
+            <span className="min-w-0 flex-1 truncate">{link.label}</span>
+            <ExternalLink className="size-3.5 shrink-0 text-muted-foreground" />
+          </a>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -570,16 +647,35 @@ function DifficultyBadges({ result }: { result: OverlapResult }) {
   )
 }
 
-function ResultCard({
-  result,
-  onOpen,
-}: {
-  result: OverlapResult
-  onOpen: () => void
-}) {
-  const triggerRef = useRef<HTMLButtonElement | null>(null)
-  const hoverTargetRef = useRef<HTMLDivElement | null>(null)
+function ResultCard({ result }: { result: OverlapResult }) {
+  const hoverTargetRef = useRef<HTMLButtonElement | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
+  const [tooltipSide, setTooltipSide] = useState<"left" | "right">("right")
+
+  const syncTooltipSide = useCallback(() => {
+    const hoverTarget = hoverTargetRef.current
+
+    if (!hoverTarget) {
+      return
+    }
+
+    const rect = hoverTarget.getBoundingClientRect()
+    const availableRight =
+      window.innerWidth - rect.right - viewportTooltipPadding
+    const availableLeft = rect.left - viewportTooltipPadding
+
+    if (availableRight >= resultCardTooltipWidth + resultCardTooltipGap) {
+      setTooltipSide("right")
+      return
+    }
+
+    if (availableLeft >= resultCardTooltipWidth + resultCardTooltipGap) {
+      setTooltipSide("left")
+      return
+    }
+
+    setTooltipSide(availableRight >= availableLeft ? "right" : "left")
+  }, [])
 
   const syncTooltipHoverState = useCallback(() => {
     const hoverTarget = hoverTargetRef.current
@@ -588,21 +684,33 @@ function ResultCard({
       return
     }
 
-    setIsTooltipOpen(hoverTarget.matches(":hover"))
-  }, [])
+    const isHovered =
+      hoverTarget.matches(":hover") ||
+      Array.from(hoverTarget.querySelectorAll("*")).some((element) =>
+        element.matches(":hover")
+      )
+
+    if (isHovered) {
+      syncTooltipSide()
+    }
+
+    setIsTooltipOpen(isHovered)
+  }, [syncTooltipSide])
 
   useEffect(() => {
-    const handleScroll = () => {
+    const handleViewportChange = () => {
       syncTooltipHoverState()
     }
 
-    window.addEventListener("scroll", handleScroll, {
+    window.addEventListener("scroll", handleViewportChange, {
       capture: true,
       passive: true,
     })
+    window.addEventListener("resize", handleViewportChange, { passive: true })
 
     return () => {
-      window.removeEventListener("scroll", handleScroll, true)
+      window.removeEventListener("scroll", handleViewportChange, true)
+      window.removeEventListener("resize", handleViewportChange)
     }
   }, [syncTooltipHoverState])
 
@@ -611,398 +719,185 @@ function ResultCard({
       return
     }
 
+    syncTooltipSide()
     setIsTooltipOpen(true)
   }
 
+  const handleLinkBlur = (event: React.FocusEvent<HTMLAnchorElement>) => {
+    if (event.currentTarget.parentElement?.contains(event.relatedTarget)) {
+      return
+    }
+
+    setIsTooltipOpen(false)
+  }
+
   return (
-    <Tooltip open={isTooltipOpen}>
-      <TooltipTrigger asChild>
-        <button
-          className="group h-full w-full text-left select-text"
-          onClick={onOpen}
-          onBlur={() => setIsTooltipOpen(false)}
-          onFocus={() => setIsTooltipOpen(true)}
-          onPointerLeave={() => setIsTooltipOpen(false)}
-          ref={triggerRef}
-          type="button"
-        >
-          <div
-            className="space-y-3 transition duration-200 group-hover:-translate-y-1"
-            onPointerEnter={handlePointerUpdate}
-            onPointerLeave={() => setIsTooltipOpen(false)}
-            onPointerMove={handlePointerUpdate}
-            ref={hoverTargetRef}
-          >
-            <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
-              <img
-                alt={getResultTitle(result)}
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
-                src={result.entry.media.coverImage.large}
-              />
-              <DifficultyBadges result={result} />
-            </div>
-            <div className="space-y-3 px-0.5">
-              <div className="flex items-start gap-2.5">
-                <StatusDot result={result} />
-                <div className="min-w-0 flex-1 space-y-1">
-                  <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
-                    {getResultTitle(result)}
-                  </h3>
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {result.matchedJimaku &&
-                  result.completeness === "incomplete" ? (
-                    <WarningDot
-                      label="Incomplete Jimaku subtitles"
-                      tone="red"
-                    />
-                  ) : null}
-                </div>
-              </div>
-            </div>
-          </div>
-        </button>
-      </TooltipTrigger>
-      <TooltipContent
-        align="start"
-        className="max-w-72 border-border bg-popover px-4 py-3.5 text-sm shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)]"
-        side="right"
-        sideOffset={14}
+    <div
+      className={cn(
+        "group relative h-full w-full",
+        isTooltipOpen ? "z-30" : "z-0"
+      )}
+      data-result-card
+    >
+      <button
+        aria-describedby={`result-card-tooltip-${result.entry.source}-${result.entry.id}`}
+        className="h-full w-full text-left select-text"
+        onBlur={() => setIsTooltipOpen(false)}
+        onFocus={() => {
+          syncTooltipSide()
+          setIsTooltipOpen(true)
+        }}
+        onPointerLeave={() => setIsTooltipOpen(false)}
+        ref={hoverTargetRef}
+        type="button"
       >
-        <div className="space-y-3.5">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-            <div>
-              <FieldLabel>Episodes</FieldLabel>
-              <p className="mt-1 font-medium text-foreground">
-                {result.entry.media.episodes ?? "Unknown"}
-              </p>
-            </div>
-            <div>
-              <FieldLabel>Jimaku Files</FieldLabel>
-              <p className="mt-1 font-medium text-foreground">
-                {result.matchedJimaku?.fileCount ?? 0}
-              </p>
-            </div>
-            {result.matchedJpdb ? (
-              <div>
-                <FieldLabel>JPDB</FieldLabel>
-                <p className="mt-1 font-medium text-foreground">
-                  {result.matchedJpdb.entry.averageDifficulty}/100
-                </p>
-              </div>
-            ) : null}
-            {result.matchedLearnNatively ? (
-              <div>
-                <FieldLabel>LearnNatively</FieldLabel>
-                <p className="mt-1 font-medium text-foreground">
-                  {result.matchedLearnNatively.entry.level} •{" "}
-                  {result.matchedLearnNatively.jlptEquivalent}
-                </p>
-              </div>
-            ) : null}
-            <div>
-              <FieldLabel>Airing Status</FieldLabel>
-              <p className="mt-1 font-medium text-foreground">
-                {getMediaStatusLabel(result.entry.media.status)}
-              </p>
-            </div>
+        <div
+          className="space-y-3"
+          onPointerEnter={handlePointerUpdate}
+          onPointerLeave={() => setIsTooltipOpen(false)}
+          onPointerMove={handlePointerUpdate}
+        >
+          <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
+            <img
+              alt={getResultTitle(result)}
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+              src={result.entry.media.coverImage.large}
+            />
+            <DifficultyBadges result={result} />
           </div>
-          <div className="border-t border-border pt-3.5">
-            <FieldLabel>Genres</FieldLabel>
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              {result.entry.media.genres.length > 0 ? (
-                result.entry.media.genres.map((genre) => (
-                  <Badge className="px-2.5" key={genre} variant="neutral">
-                    {genre}
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-muted-foreground">Unknown</span>
-              )}
+          <div className="space-y-3 px-0.5">
+            <div className="flex items-start gap-2.5">
+              <StatusDot result={result} />
+              <div className="min-w-0 flex-1 space-y-1">
+                <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
+                  {getResultTitle(result)}
+                </h3>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                {result.matchedJimaku &&
+                result.completeness === "incomplete" ? (
+                  <WarningDot label="Incomplete Jimaku subtitles" tone="red" />
+                ) : null}
+              </div>
             </div>
           </div>
         </div>
-      </TooltipContent>
-    </Tooltip>
-  )
-}
-
-function ResultDialog({
-  open,
-  onOpenChange,
-  result,
-}: {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  result: OverlapResult | null
-}) {
-  return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="shadow-[0_24px_80px_-36px_rgba(0,0,0,0.85)] sm:max-w-3xl">
-        {result ? (
-          <>
-            <DialogHeader>
-              <DialogTitle className="pr-8 text-xl">
-                {getResultTitle(result)}
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-6 md:grid-cols-[180px_minmax(0,1fr)]">
+      </button>
+      {isTooltipOpen ? (
+        <div
+          className="pointer-events-none absolute top-0 hidden w-80 animate-in zoom-in-[0.98] rounded-lg border border-border bg-popover px-4 py-3.5 text-sm text-popover-foreground shadow-[0_20px_60px_-32px_rgba(0,0,0,0.95)] duration-400 lg:block"
+          id={`result-card-tooltip-${result.entry.source}-${result.entry.id}`}
+          role="tooltip"
+          style={
+            tooltipSide === "right"
+              ? { left: `calc(100% + ${resultCardTooltipGap}px)` }
+              : { right: `calc(100% + ${resultCardTooltipGap}px)` }
+          }
+        >
+          <div className="space-y-3.5">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               <div>
-                <img
-                  alt={getResultTitle(result)}
-                  className="aspect-[3/4] w-full rounded-lg object-cover shadow-lg"
-                  src={result.entry.media.coverImage.large}
-                />
+                <FieldLabel>Episodes</FieldLabel>
+                <p className="mt-1 font-medium text-foreground">
+                  {result.entry.media.episodes ?? "Unknown"}
+                </p>
               </div>
-              <div className="space-y-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    className="h-auto gap-2 px-3 py-1 text-sm"
-                    variant="neutral"
-                  >
-                    <StatusDot result={result} />
-                    <span>{statusLabel[result.entry.status]}</span>
-                  </Badge>
-                  {result.matchedJimaku &&
-                  result.completeness === "incomplete" ? (
-                    <Badge
-                      className="h-auto gap-2 px-3 py-1 text-sm"
-                      variant="destructive"
-                    >
-                      <WarningDot
-                        label="Incomplete Jimaku subtitles"
-                        tone="red"
-                      />
-                      <span>Incomplete Jimaku subtitles</span>
-                    </Badge>
-                  ) : null}
-                </div>
-                <div className="grid gap-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <FieldLabel>
-                        {getSourceLabel(result.entry.source)}
-                      </FieldLabel>
-                      <p className="text-sm font-medium text-foreground">
-                        {getEntryTitle(result.entry)}
-                      </p>
-                    </div>
-                    <Button asChild size="sm" variant="outline">
-                      <a
-                        className="border-border bg-background text-foreground hover:bg-accent"
-                        href={result.entry.media.siteUrl}
-                        rel="noreferrer"
-                        target="_blank"
-                      >
-                        Open
-                        <ExternalLink />
-                      </a>
-                    </Button>
-                  </div>
-                  {result.matchedJimaku ? (
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <FieldLabel>Jimaku</FieldLabel>
-                        <p className="text-sm font-medium text-foreground">
-                          {result.matchedJimaku.name}
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a
-                          className="border-border bg-background text-foreground hover:bg-accent"
-                          href={result.matchedJimaku.url}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          Open
-                          <ExternalLink />
-                        </a>
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <FieldLabel>Jimaku</FieldLabel>
-                      <p className="text-sm font-medium text-foreground">
-                        No Jimaku match
-                      </p>
-                    </div>
-                  )}
-                </div>
-                <div className="grid gap-5 text-sm text-muted-foreground sm:grid-cols-2">
+              <div>
+                <FieldLabel>Jimaku Files</FieldLabel>
+                <p className="mt-1 font-medium text-foreground">
+                  {result.matchedJimaku?.fileCount ?? 0}
+                </p>
+              </div>
+              {result.matchedJpdb ? (
+                <>
                   <div>
-                    <FieldLabel>Episodes</FieldLabel>
-                    <p className="mt-2 text-lg font-semibold text-foreground">
-                      {result.entry.media.episodes ?? "Unknown"}
+                    <FieldLabel>Average difficulty</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.averageDifficulty}/100
                     </p>
                   </div>
                   <div>
-                    <FieldLabel>Jimaku Files</FieldLabel>
-                    <p className="mt-2 text-lg font-semibold text-foreground">
-                      {result.matchedJimaku?.fileCount ?? 0}
+                    <FieldLabel>Peak difficulty</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.peakDifficulty90thPercentile}
+                      /100
                     </p>
                   </div>
+                  <div>
+                    <FieldLabel>Length</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.lengthInWords.toLocaleString()}{" "}
+                      words
+                    </p>
+                  </div>
+                  <div>
+                    <FieldLabel>Unique words</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <FieldLabel>Unique kanji</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <FieldLabel>Words used once</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
+                      ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}%)
+                    </p>
+                  </div>
+                  <div>
+                    <FieldLabel>Unique readings</FieldLabel>
+                    <p className="mt-1 font-medium text-foreground">
+                      {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
+                    </p>
+                  </div>
+                </>
+              ) : null}
+              {result.matchedLearnNatively ? (
+                <div>
+                  <FieldLabel>LearnNatively</FieldLabel>
+                  <p className="mt-1 font-medium text-foreground">
+                    {result.matchedLearnNatively.entry.level} •{" "}
+                    {result.matchedLearnNatively.jlptEquivalent}
+                  </p>
                 </div>
-                {result.matchedJpdb ? (
-                  <div className="grid gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <FieldLabel>JPDB</FieldLabel>
-                        <p className="text-sm font-medium text-foreground">
-                          Average difficulty{" "}
-                          {result.matchedJpdb.entry.averageDifficulty}
-                          /100
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a
-                          className="border-border bg-background text-foreground hover:bg-accent"
-                          href={result.matchedJpdb.entry.jpdbUrl}
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          Open
-                          <ExternalLink />
-                        </a>
-                      </Button>
-                    </div>
-                    <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
-                      <div>
-                        <FieldLabel>Peak difficulty</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {
-                            result.matchedJpdb.entry
-                              .peakDifficulty90thPercentile
-                          }
-                          /100
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>Length</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedJpdb.entry.lengthInWords.toLocaleString()}{" "}
-                          words
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>Unique words</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedJpdb.entry.uniqueWords.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>Unique kanji</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedJpdb.entry.uniqueKanji.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>Words used once</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedJpdb.entry.uniqueWordsUsedOnce.toLocaleString()}{" "}
-                          ({result.matchedJpdb.entry.uniqueWordsUsedOncePercent}
-                          %)
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>Unique readings</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedJpdb.entry.uniqueKanjiReadings.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-                {result.matchedLearnNatively ? (
-                  <div className="grid gap-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <FieldLabel>LearnNatively</FieldLabel>
-                        <p className="text-sm font-medium text-foreground">
-                          {result.matchedLearnNatively.entry.level} •{" "}
-                          {result.matchedLearnNatively.jlptEquivalent}{" "}
-                          <span className="text-muted-foreground">
-                            {
-                              learnNativelyJlptDescriptions[
-                                result.matchedLearnNatively.jlptEquivalent
-                              ]
-                            }
-                          </span>
-                        </p>
-                      </div>
-                      <Button asChild size="sm" variant="outline">
-                        <a
-                          className="border-border bg-background text-foreground hover:bg-accent"
-                          href={
-                            result.matchedLearnNatively.entry.learnnativelyUrl
-                          }
-                          rel="noreferrer"
-                          target="_blank"
-                        >
-                          Open
-                          <ExternalLink />
-                        </a>
-                      </Button>
-                    </div>
-                    <div className="grid gap-4 text-sm text-muted-foreground sm:grid-cols-2">
-                      <div>
-                        <FieldLabel>Exact level</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedLearnNatively.entry.level}
-                        </p>
-                      </div>
-                      <div>
-                        <FieldLabel>JLPT equivalent</FieldLabel>
-                        <p className="mt-1 font-medium text-foreground">
-                          {result.matchedLearnNatively.jlptEquivalent}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : null}
-                {result.isAmbiguous && result.alternates.length > 0 ? (
-                  <div className="space-y-3 rounded-lg border border-amber-500/20 bg-amber-400/10 p-4">
-                    <div className="flex items-center gap-2 text-amber-100">
-                      <TriangleAlert className="size-4" />
-                      <p className="text-sm font-semibold">
-                        Alternate Jimaku candidates
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      {result.alternates.map((candidate) => (
-                        <div
-                          className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/60 p-3"
-                          key={candidate.jimakuEntry.id}
-                        >
-                          <div>
-                            <p className="text-sm font-medium text-foreground">
-                              {candidate.jimakuEntry.name}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              Match {Math.round(candidate.score * 100)}%
-                            </p>
-                          </div>
-                          <Button asChild size="sm" variant="outline">
-                            <a
-                              className="border-border bg-background text-foreground hover:bg-accent"
-                              href={candidate.jimakuEntry.url}
-                              rel="noreferrer"
-                              target="_blank"
-                            >
-                              Open
-                              <ExternalLink />
-                            </a>
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
+              ) : null}
+              <div>
+                <FieldLabel>Airing Status</FieldLabel>
+                <p className="mt-1 font-medium text-foreground">
+                  {getMediaStatusLabel(result.entry.media.status)}
+                </p>
               </div>
             </div>
-          </>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+            <div className="border-t border-border pt-3.5">
+              <FieldLabel>Genres</FieldLabel>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {result.entry.media.genres.length > 0 ? (
+                  result.entry.media.genres.map((genre) => (
+                    <Badge className="px-2.5" key={genre} variant="neutral">
+                      {genre}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground">Unknown</span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+      <PlatformLinks
+        onBlur={handleLinkBlur}
+        onFocus={() => setIsTooltipOpen(true)}
+        onPointerEnter={() => setIsTooltipOpen(true)}
+        onPointerLeave={() => setIsTooltipOpen(false)}
+        result={result}
+      />
+    </div>
   )
 }
 
@@ -1018,9 +913,6 @@ export function AnimeOverlapPage({
   )
   const [lookupState, setLookupState] = useState<LookupResponse | null>(null)
   const [isPending, setIsPending] = useState(false)
-  const [selectedResult, setSelectedResult] = useState<OverlapResult | null>(
-    null
-  )
   const autoLookupPerformedRef = useRef(false)
 
   const activeSearchState = searchState ?? localSearchState
@@ -1323,23 +1215,61 @@ export function AnimeOverlapPage({
 
   return (
     <TooltipProvider>
-      <main className="min-h-svh bg-[linear-gradient(180deg,_var(--background)_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-foreground">
+      <main className="min-h-svh overflow-x-clip bg-[linear-gradient(180deg,_var(--background)_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-foreground">
         <section
           className={cn(
             "mx-auto flex min-h-svh w-full max-w-[1520px] flex-col px-4 py-8 sm:px-6 lg:px-8",
-            hasResultsState ? "gap-8" : ""
+            hasResultsState ? "gap-8" : "justify-center"
           )}
         >
           <div
             className={cn(
-              "space-y-5 text-center transition-transform duration-500 ease-out",
-              hasResultsState ? "translate-y-0" : "translate-y-[38vh]"
+              "mx-auto flex w-full max-w-4xl flex-col items-center justify-center text-center transition-all duration-700 ease-out",
+              hasResultsState ? "space-y-5" : "space-y-0"
             )}
           >
-            <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-              Nani next?
+            <div
+              className={cn(
+                "mx-auto overflow-hidden transition-[max-height,opacity,margin] ease-out",
+                hasResultsState
+                  ? "mb-0 max-h-0 opacity-0 duration-300"
+                  : "mb-6 text-4xl opacity-100 duration-300 sm:text-5xl"
+              )}
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                className="mx-auto h-auto w-[7.35ch] max-w-[78vw] object-contain"
+                src="/nani-next-mark.png"
+              />
+            </div>
+            <h1
+              className={cn(
+                "inline-flex justify-center font-semibold tracking-tight text-foreground transition-all duration-700 ease-out",
+                hasResultsState
+                  ? "items-center gap-4 text-5xl sm:text-6xl"
+                  : "mb-6 items-center gap-0 text-4xl sm:text-5xl"
+              )}
+            >
+              <img
+                alt=""
+                aria-hidden="true"
+                className={cn(
+                  "object-contain transition-all duration-700 ease-out",
+                  hasResultsState
+                    ? "mr-0 size-24 opacity-100 sm:size-28"
+                    : "mr-[-0.5rem] size-0 opacity-0"
+                )}
+                src="/nani-next-mark.png"
+              />
+              <span>Nani next?</span>
             </h1>
-            <p className="text-base text-muted-foreground sm:text-lg">
+            <p
+              className={cn(
+                "text-base text-muted-foreground sm:text-lg",
+                hasResultsState ? "" : "mb-6"
+              )}
+            >
               Find your next anime to study japanese
             </p>
             <form
@@ -1386,6 +1316,7 @@ export function AnimeOverlapPage({
                 />
               </div>
               <Button
+                aria-label={isPending ? "Searching" : "Find overlap"}
                 className="h-12 px-6 text-sm font-semibold"
                 disabled={isPending}
                 type="submit"
@@ -1396,10 +1327,7 @@ export function AnimeOverlapPage({
                     Searching
                   </>
                 ) : (
-                  <>
-                    <Sparkles />
-                    Find overlap
-                  </>
+                  <ArrowRight />
                 )}
               </Button>
             </form>
@@ -1750,7 +1678,6 @@ export function AnimeOverlapPage({
                     {visibleResults.map((result) => (
                       <ResultCard
                         key={`${result.entry.source}-${result.entry.id}`}
-                        onOpen={() => setSelectedResult(result)}
                         result={result}
                       />
                     ))}
@@ -1760,16 +1687,6 @@ export function AnimeOverlapPage({
             </div>
           ) : null}
         </section>
-
-        <ResultDialog
-          onOpenChange={(open) => {
-            if (!open) {
-              setSelectedResult(null)
-            }
-          }}
-          open={selectedResult !== null}
-          result={selectedResult}
-        />
       </main>
     </TooltipProvider>
   )

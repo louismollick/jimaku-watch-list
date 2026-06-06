@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react"
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react"
 import { useState } from "react"
 import { describe, expect, it, vi } from "vitest"
 import { AnimeOverlapPage } from "@/components/anime-overlap-page"
@@ -881,7 +887,7 @@ describe("AnimeOverlapPage", () => {
 
     const blueBoxCard = screen
       .getByRole("heading", { name: "Blue Box" })
-      .closest("button")
+      .closest("[data-result-card]")
 
     expect(blueBoxCard).not.toBeNull()
 
@@ -1264,7 +1270,7 @@ describe("AnimeOverlapPage", () => {
     ).toBeInTheDocument()
   })
 
-  it("shows alternate matches in the detail dialog without low-confidence UI", async () => {
+  it("does nothing on card click", async () => {
     await loadResults()
     await selectComboboxOption(
       "Japanese subtitle availability",
@@ -1273,27 +1279,61 @@ describe("AnimeOverlapPage", () => {
 
     fireEvent.click((await screen.findAllByText("Dandadan"))[0])
 
-    expect(
-      await screen.findByText("Alternate Jimaku candidates")
-    ).toBeInTheDocument()
-    expect(screen.getByText("Dandadan TV")).toBeInTheDocument()
-    expect(screen.queryByText("Low confidence")).not.toBeInTheDocument()
+    expect(screen.queryByText("Alternate Jimaku candidates")).toBeNull()
+    expect(screen.queryByText("Dandadan TV")).toBeNull()
   })
 
-  it("renders difficulty badges and modal metadata", async () => {
+  it("renders difficulty badges and expanded hover metadata", async () => {
     await loadResults()
 
     expect(screen.getAllByText("80/100").length).toBeGreaterThan(0)
     expect(screen.getAllByText("N1").length).toBeGreaterThan(0)
+    const apothecaryCard = screen
+      .getByAltText("The Apothecary Diaries")
+      .closest("[data-result-card]")
 
-    fireEvent.click((await screen.findAllByText("The Apothecary Diaries"))[0])
+    expect(apothecaryCard).not.toBeNull()
+
+    const apothecaryLinks = within(apothecaryCard as HTMLElement)
 
     expect(
-      await screen.findByText(/average difficulty 80\/100/i)
-    ).toBeInTheDocument()
-    expect(screen.getByText("Peak difficulty")).toBeInTheDocument()
-    expect(screen.getByText("Exact level")).toBeInTheDocument()
-    expect(screen.getByText("L40")).toBeInTheDocument()
+      apothecaryLinks.getByRole("link", { name: /anilist/i })
+    ).toHaveAttribute("href", "https://anilist.co/anime/13")
+    expect(
+      apothecaryLinks.getByRole("link", { name: /jimaku/i })
+    ).toHaveAttribute("href", "https://jimaku.cc/entry/103")
+    expect(
+      apothecaryLinks.getByRole("link", { name: /jpdb/i })
+    ).toHaveAttribute("href", "https://jpdb.io/anime/13/the-apothecary-diaries")
+    expect(
+      apothecaryLinks.getByRole("link", { name: /learnnatively/i })
+    ).toHaveAttribute(
+      "href",
+      "https://learnnatively.com/season/the-apothecary-diaries/"
+    )
+
+    const apothecaryPoster = screen
+      .getByAltText("The Apothecary Diaries")
+      .closest("div")
+
+    expect(apothecaryPoster).not.toBeNull()
+
+    fireEvent.pointerMove(apothecaryPoster as HTMLElement, {
+      clientX: 50,
+      clientY: 50,
+      pointerType: "mouse",
+    })
+
+    const tooltip = await screen.findByRole("tooltip")
+
+    expect(tooltip.textContent).toContain("Average difficulty")
+    expect(tooltip.textContent).toContain("Peak difficulty")
+    expect(tooltip.textContent).toContain("Length")
+    expect(tooltip.textContent).toContain("Unique words")
+    expect(tooltip.textContent).toContain("Unique kanji")
+    expect(tooltip.textContent).toContain("Words used once")
+    expect(tooltip.textContent).toContain("Unique readings")
+    expect(tooltip.textContent).toContain("80/100")
   })
 
   it("filters by JPDB difficulty range and excludes higher-difficulty results", async () => {
