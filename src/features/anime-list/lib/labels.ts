@@ -49,5 +49,5 @@ export function getSourceLabel(source: AnimeSource) {
 }
 
 export function getMediaStatusLabel(status: MediaStatus) {
-  return status ? mediaStatusLabel[status] : "Unknown"
+  return status ? (mediaStatusLabel[status] ?? "Unknown") : "Unknown"
 }

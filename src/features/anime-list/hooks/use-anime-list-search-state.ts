@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import {
   defaultLookupSearchState,
   type LookupSearchState,
@@ -13,21 +13,30 @@ export function useAnimeListSearchState({
   ) => void
   searchState?: LookupSearchState
 }) {
+  const isControlled =
+    searchState !== undefined && onSearchStateChange !== undefined
   const [localSearchState, setLocalSearchState] = useState(
-    defaultLookupSearchState
+    () => searchState ?? defaultLookupSearchState
   )
-  const activeSearchState = searchState ?? localSearchState
+
+  useEffect(() => {
+    if (!isControlled && searchState) {
+      setLocalSearchState(searchState)
+    }
+  }, [isControlled, searchState])
+
+  const activeSearchState = isControlled ? searchState : localSearchState
 
   const updateSearchState = useCallback(
     (updater: (previousState: LookupSearchState) => LookupSearchState) => {
-      if (onSearchStateChange) {
+      if (isControlled) {
         onSearchStateChange(updater)
         return
       }
 
       setLocalSearchState(updater)
     },
-    [onSearchStateChange]
+    [isControlled, onSearchStateChange]
   )
 
   return { activeSearchState, updateSearchState }

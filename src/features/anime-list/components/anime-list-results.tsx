@@ -12,7 +12,7 @@ export function AnimeListResults({
     <section className="space-y-4">
       {lookupStateOk ? (
         <div className="text-sm text-muted-foreground">
-          Showing {results.length} results
+          Showing {results.length} result{results.length === 1 ? "" : "s"}
         </div>
       ) : null}
       {results.length > 0 ? (

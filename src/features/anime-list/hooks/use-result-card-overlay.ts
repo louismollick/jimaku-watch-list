@@ -75,6 +75,10 @@ export function useResultCardOverlay(
   }, [])
 
   useEffect(() => {
+    if (!isTooltipOpen) {
+      return
+    }
+
     const handleViewportChange = () => syncTooltipHoverState()
 
     window.addEventListener("scroll", handleViewportChange, {
@@ -86,7 +90,7 @@ export function useResultCardOverlay(
       window.removeEventListener("scroll", handleViewportChange, true)
       window.removeEventListener("resize", handleViewportChange)
     }
-  }, [syncTooltipHoverState])
+  }, [isTooltipOpen, syncTooltipHoverState])
 
   const handlePointerUpdate = (event: ReactPointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch" || isMobileViewport) {

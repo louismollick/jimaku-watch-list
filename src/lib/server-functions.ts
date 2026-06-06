@@ -23,11 +23,13 @@ function validateLookupInput(data: unknown): {
     throw new Error("Invalid anime source.")
   }
 
-  if (typeof username !== "string" || username.trim().length === 0) {
+  const trimmedUsername = typeof username === "string" ? username.trim() : ""
+
+  if (trimmedUsername.length === 0) {
     throw new Error("Username is required.")
   }
 
-  return { source: source as AnimeSource, username }
+  return { source: source as AnimeSource, username: trimmedUsername }
 }
 
 export const lookupOverlap = createServerFn({ method: "GET" })

@@ -36,15 +36,16 @@ function formatAbsoluteFetchedAt(value: string) {
 
 function formatCacheTtl(ttlSeconds: number) {
   if (ttlSeconds < 60) {
-    return `${ttlSeconds} second${ttlSeconds === 1 ? "" : "s"}`
+    const seconds = Math.floor(ttlSeconds)
+    return `${seconds} second${seconds === 1 ? "" : "s"}`
   }
 
   if (ttlSeconds < 3600) {
-    const minutes = ttlSeconds / 60
+    const minutes = Math.floor(ttlSeconds / 60)
     return `${minutes} minute${minutes === 1 ? "" : "s"}`
   }
 
-  const hours = ttlSeconds / 3600
+  const hours = Math.floor(ttlSeconds / 3600)
   return `${hours} hour${hours === 1 ? "" : "s"}`
 }
 
@@ -55,7 +56,7 @@ export function LookupFreshness({ fetchedAt }: { fetchedAt: string }) {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          aria-label="Fetch details"
+          aria-label="Show cache information"
           className="inline-flex items-center gap-1.5 text-muted-foreground underline decoration-border underline-offset-4 hover:text-foreground"
           type="button"
         >

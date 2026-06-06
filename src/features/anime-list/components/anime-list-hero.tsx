@@ -72,7 +72,7 @@ export function AnimeListHero({
           hasResultsState ? "" : "mb-6"
         )}
       >
-        Find your next anime to study japanese
+        Find your next anime to study Japanese
       </p>
       <AnimeListSearchForm
         handleSubmit={handleSubmit}

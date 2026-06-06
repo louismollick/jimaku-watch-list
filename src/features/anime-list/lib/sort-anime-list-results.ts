@@ -76,8 +76,8 @@ export function sortAnimeListResults(
       statusOrder[left.entry.status] - statusOrder[right.entry.status]
     return statusDelta !== 0
       ? sortDirection === "desc"
-        ? statusDelta
-        : statusDelta * -1
+        ? statusDelta * -1
+        : statusDelta
       : compareTitles(left, right)
   })
 }

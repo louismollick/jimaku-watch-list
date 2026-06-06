@@ -31,7 +31,6 @@ export function AnimeListSortControls({
       <div className="flex items-center justify-between gap-3">
         <Label className="text-label text-muted-foreground">Sort by</Label>
         <Tabs
-          aria-label="Sort direction"
           className="gap-0"
           onValueChange={(value) =>
             updateSearchState((previousState) => ({

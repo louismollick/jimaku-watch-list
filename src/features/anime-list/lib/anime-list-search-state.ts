@@ -57,9 +57,9 @@ export function serializeSelectedValues<TValue extends string>(
 }
 
 export function serializeGenreValues(values: Iterable<string>) {
-  return [...values]
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean)
-    .filter((value, index, items) => items.indexOf(value) === index)
-    .sort((left, right) => left.localeCompare(right))
+  return [
+    ...new Set(
+      [...values].map((value) => value.trim().toLowerCase()).filter(Boolean)
+    ),
+  ].sort((left, right) => left.localeCompare(right))
 }

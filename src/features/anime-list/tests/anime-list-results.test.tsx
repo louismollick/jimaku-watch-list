@@ -24,7 +24,7 @@ describe("AnimeListResults", () => {
     })
 
     await waitFor(() =>
-      expect(screen.getByText("Showing 1 results")).toBeInTheDocument()
+      expect(screen.getByText("Showing 1 result")).toBeInTheDocument()
     )
   })
 
