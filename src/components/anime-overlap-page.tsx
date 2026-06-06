@@ -92,27 +92,6 @@ type AnimeOverlapPageProps = {
   searchState?: LookupSearchState
 }
 
-type PointerPosition = {
-  clientX: number
-  clientY: number
-}
-
-let lastKnownPointerPosition: PointerPosition | null = null
-
-function isPointerWithinElement(
-  element: HTMLElement,
-  pointerPosition: PointerPosition
-) {
-  const rect = element.getBoundingClientRect()
-
-  return (
-    pointerPosition.clientX >= rect.left &&
-    pointerPosition.clientX <= rect.right &&
-    pointerPosition.clientY >= rect.top &&
-    pointerPosition.clientY <= rect.bottom
-  )
-}
-
 const relativeTimeFormatter = new Intl.RelativeTimeFormat(undefined, {
   numeric: "auto",
 })
@@ -599,16 +578,17 @@ function ResultCard({
   onOpen: () => void
 }) {
   const triggerRef = useRef<HTMLButtonElement | null>(null)
+  const hoverTargetRef = useRef<HTMLDivElement | null>(null)
   const [isTooltipOpen, setIsTooltipOpen] = useState(false)
 
   const syncTooltipHoverState = useCallback(() => {
-    const trigger = triggerRef.current
+    const hoverTarget = hoverTargetRef.current
 
-    if (!trigger || !lastKnownPointerPosition) {
+    if (!hoverTarget) {
       return
     }
 
-    setIsTooltipOpen(isPointerWithinElement(trigger, lastKnownPointerPosition))
+    setIsTooltipOpen(hoverTarget.matches(":hover"))
   }, [])
 
   useEffect(() => {
@@ -626,14 +606,9 @@ function ResultCard({
     }
   }, [syncTooltipHoverState])
 
-  const handlePointerUpdate = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const handlePointerUpdate = (event: ReactPointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch") {
       return
-    }
-
-    lastKnownPointerPosition = {
-      clientX: event.clientX,
-      clientY: event.clientY,
     }
 
     setIsTooltipOpen(true)
@@ -647,13 +622,17 @@ function ResultCard({
           onClick={onOpen}
           onBlur={() => setIsTooltipOpen(false)}
           onFocus={() => setIsTooltipOpen(true)}
-          onPointerEnter={handlePointerUpdate}
           onPointerLeave={() => setIsTooltipOpen(false)}
-          onPointerMove={handlePointerUpdate}
           ref={triggerRef}
           type="button"
         >
-          <div className="space-y-3 transition duration-200 group-hover:-translate-y-1">
+          <div
+            className="space-y-3 transition duration-200 group-hover:-translate-y-1"
+            onPointerEnter={handlePointerUpdate}
+            onPointerLeave={() => setIsTooltipOpen(false)}
+            onPointerMove={handlePointerUpdate}
+            ref={hoverTargetRef}
+          >
             <div className="relative aspect-[3/4] overflow-hidden rounded-md bg-background shadow-[0_18px_40px_-30px_rgba(0,0,0,0.95)]">
               <img
                 alt={getResultTitle(result)}

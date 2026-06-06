@@ -804,8 +804,11 @@ describe("AnimeOverlapPage", () => {
       toJSON: () => ({}),
     }
 
-    const blueBoxElement = blueBoxCard as HTMLElement
-    const orbElement = orbCard as HTMLElement
+    const blueBoxElement = (blueBoxCard as HTMLElement)
+      .firstElementChild as HTMLElement
+    const orbElement = (orbCard as HTMLElement).firstElementChild as HTMLElement
+    let blueBoxHovered = true
+    let orbHovered = false
 
     Object.defineProperty(blueBoxElement, "getBoundingClientRect", {
       configurable: true,
@@ -814,6 +817,20 @@ describe("AnimeOverlapPage", () => {
     Object.defineProperty(orbElement, "getBoundingClientRect", {
       configurable: true,
       value: vi.fn(() => orbRect as DOMRect),
+    })
+    vi.spyOn(blueBoxElement, "matches").mockImplementation((selector) => {
+      if (selector === ":hover") {
+        return blueBoxHovered
+      }
+
+      return Element.prototype.matches.call(blueBoxElement, selector)
+    })
+    vi.spyOn(orbElement, "matches").mockImplementation((selector) => {
+      if (selector === ":hover") {
+        return orbHovered
+      }
+
+      return Element.prototype.matches.call(orbElement, selector)
     })
 
     fireEvent.pointerMove(blueBoxElement, {
@@ -838,11 +855,90 @@ describe("AnimeOverlapPage", () => {
       top: 0,
       y: 0,
     }
+    blueBoxHovered = false
+    orbHovered = true
 
     fireEvent.scroll(document.documentElement)
 
     await waitFor(() => {
       expect(screen.getByRole("tooltip").textContent).toContain("24")
+    })
+  })
+
+  it("does not open a tooltip when the pointer is outside the poster", async () => {
+    await loadResultsWithState({
+      selectedStatuses: [
+        "CURRENT",
+        "PLANNING",
+        "COMPLETED",
+        "PAUSED",
+        "DROPPED",
+      ],
+      selectedSubtitleAvailability: ["all", "some", "none"],
+      sortBy: "title",
+      sortDirection: "asc",
+    })
+
+    const blueBoxCard = screen
+      .getByRole("heading", { name: "Blue Box" })
+      .closest("button")
+
+    expect(blueBoxCard).not.toBeNull()
+
+    fireEvent.pointerMove(blueBoxCard as HTMLElement, {
+      clientX: 50,
+      clientY: 150,
+      pointerType: "mouse",
+    })
+    fireEvent.scroll(document.documentElement)
+
+    expect(screen.queryByRole("tooltip")).toBeNull()
+  })
+
+  it("closes the tooltip when hover leaves during continued scroll", async () => {
+    await loadResultsWithState({
+      selectedStatuses: [
+        "CURRENT",
+        "PLANNING",
+        "COMPLETED",
+        "PAUSED",
+        "DROPPED",
+      ],
+      selectedSubtitleAvailability: ["all", "some", "none"],
+      sortBy: "title",
+      sortDirection: "asc",
+    })
+
+    const blueBoxPoster = screen.getByAltText("Blue Box").closest("div")
+
+    expect(blueBoxPoster).not.toBeNull()
+
+    const blueBoxElement = blueBoxPoster as HTMLElement
+    let blueBoxHovered = true
+
+    vi.spyOn(blueBoxElement, "matches").mockImplementation((selector) => {
+      if (selector === ":hover") {
+        return blueBoxHovered
+      }
+
+      return Element.prototype.matches.call(blueBoxElement, selector)
+    })
+
+    fireEvent.pointerMove(blueBoxElement, {
+      clientX: 50,
+      clientY: 50,
+      pointerType: "mouse",
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole("tooltip").textContent).toContain("12")
+    })
+
+    blueBoxHovered = false
+    fireEvent.scroll(document.documentElement)
+
+    await waitFor(() => {
+      expect(screen.queryByRole("tooltip")).toBeNull()
     })
   })
 
