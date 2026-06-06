@@ -1,0 +1,281 @@
+{
+  "ok": true,
+  "source": "anilist",
+  "username": "mollicl",
+  "fetchedAt": "2026-06-02T22:14:00.000Z",
+  "totalAnime": 4,
+  "matchedCount": 3,
+  "results": [
+    {
+      "entry": {
+        "source": "anilist",
+        "id": 1,
+        "status": "CURRENT",
+        "score": 70,
+        "progress": 3,
+        "media": {
+          "id": 11,
+          "anilistId": 11,
+          "myanimelistId": 111,
+          "episodes": 12,
+          "releasedEpisodes": 12,
+          "averageScore": 88,
+          "popularity": 15000,
+          "status": "FINISHED",
+          "genres": ["Romance", "Sports"],
+          "format": "TV",
+          "siteUrl": "https://anilist.co/anime/11",
+          "synonyms": [],
+          "coverImage": {
+            "large": "https://example.com/one.jpg",
+            "color": "#4f8dfc"
+          },
+          "title": {
+            "primary": "Blue Box",
+            "english": "Blue Box",
+            "native": "アオのハコ"
+          }
+        }
+      },
+      "matchedJimaku": {
+        "id": 101,
+        "anilistId": 11,
+        "myanimelistId": 111,
+        "url": "https://jimaku.cc/entry/101",
+        "name": "Blue Box",
+        "englishName": "Blue Box",
+        "japaneseName": "アオのハコ",
+        "fileCount": 12,
+        "flags": 1,
+        "updatedAt": null,
+        "titles": ["Blue Box"],
+        "normalizedTitles": ["blue box"]
+      },
+      "alternates": [],
+      "matchScore": 1,
+      "matchReason": "anilist-id",
+      "isAmbiguous": false,
+      "completeness": "complete",
+      "matchedJpdb": {
+        "entry": {
+          "name": "Blue Box",
+          "jpdbUrl": "https://jpdb.io/anime/11/blue-box",
+          "lengthInWords": 12000,
+          "uniqueWords": 1800,
+          "uniqueWordsUsedOnce": 700,
+          "uniqueWordsUsedOncePercent": 39,
+          "uniqueKanji": 650,
+          "uniqueKanjiUsedOnce": 180,
+          "uniqueKanjiReadings": 920,
+          "averageDifficulty": 25,
+          "peakDifficulty90thPercentile": 32
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title"
+      },
+      "matchedLearnNatively": {
+        "entry": {
+          "learnnativelyUrl": "https://learnnatively.com/season/blue-box/",
+          "name": "Blue Box",
+          "level": "L12"
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title",
+        "jlptEquivalent": "N4",
+        "levelNumber": 12
+      }
+    },
+    {
+      "entry": {
+        "source": "anilist",
+        "id": 2,
+        "status": "PLANNING",
+        "score": 60,
+        "progress": 0,
+        "media": {
+          "id": 12,
+          "anilistId": 12,
+          "myanimelistId": 112,
+          "episodes": 24,
+          "releasedEpisodes": 24,
+          "averageScore": 90,
+          "popularity": 45000,
+          "status": "FINISHED",
+          "genres": ["Drama", "Historical"],
+          "format": "TV",
+          "siteUrl": "https://anilist.co/anime/12",
+          "synonyms": [],
+          "coverImage": {
+            "large": "https://example.com/two.jpg",
+            "color": "#edb63f"
+          },
+          "title": { "primary": "Orb", "english": "Orb", "native": "チ。" }
+        }
+      },
+      "matchedJimaku": {
+        "id": 102,
+        "anilistId": 12,
+        "myanimelistId": 112,
+        "url": "https://jimaku.cc/entry/102",
+        "name": "Orb",
+        "englishName": "Orb",
+        "japaneseName": "チ。",
+        "fileCount": 18,
+        "flags": 1,
+        "updatedAt": null,
+        "titles": ["Orb"],
+        "normalizedTitles": ["orb"]
+      },
+      "alternates": [],
+      "matchScore": 1,
+      "matchReason": "anilist-id",
+      "isAmbiguous": false,
+      "completeness": "incomplete",
+      "matchedJpdb": {
+        "entry": {
+          "name": "Orb",
+          "jpdbUrl": "https://jpdb.io/anime/12/orb",
+          "lengthInWords": 30000,
+          "uniqueWords": 4000,
+          "uniqueWordsUsedOnce": 1600,
+          "uniqueWordsUsedOncePercent": 40,
+          "uniqueKanji": 1200,
+          "uniqueKanjiUsedOnce": 350,
+          "uniqueKanjiReadings": 1750,
+          "averageDifficulty": 35,
+          "peakDifficulty90thPercentile": 96
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title"
+      },
+      "matchedLearnNatively": {
+        "entry": {
+          "learnnativelyUrl": "https://learnnatively.com/season/orb/",
+          "name": "Orb",
+          "level": "L18"
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title",
+        "jlptEquivalent": "N3",
+        "levelNumber": 18
+      }
+    },
+    {
+      "entry": {
+        "source": "anilist",
+        "id": 3,
+        "status": "PLANNING",
+        "score": 88,
+        "progress": 0,
+        "media": {
+          "id": 13,
+          "anilistId": 13,
+          "myanimelistId": 113,
+          "episodes": 24,
+          "releasedEpisodes": 24,
+          "averageScore": 95,
+          "popularity": 55000,
+          "status": "FINISHED",
+          "genres": ["Drama", "Mystery"],
+          "format": "TV",
+          "siteUrl": "https://anilist.co/anime/13",
+          "synonyms": [],
+          "coverImage": {
+            "large": "https://example.com/three.jpg",
+            "color": "#77bc9f"
+          },
+          "title": {
+            "primary": "The Apothecary Diaries",
+            "english": "The Apothecary Diaries",
+            "native": "薬屋のひとりごと"
+          }
+        }
+      },
+      "matchedJimaku": {
+        "id": 103,
+        "anilistId": 13,
+        "myanimelistId": 113,
+        "url": "https://jimaku.cc/entry/103",
+        "name": "The Apothecary Diaries",
+        "englishName": "The Apothecary Diaries",
+        "japaneseName": "薬屋のひとりごと",
+        "fileCount": 24,
+        "flags": 1,
+        "updatedAt": null,
+        "titles": ["The Apothecary Diaries"],
+        "normalizedTitles": ["the apothecary diaries"]
+      },
+      "alternates": [],
+      "matchScore": 1,
+      "matchReason": "anilist-id",
+      "isAmbiguous": false,
+      "completeness": "complete",
+      "matchedJpdb": {
+        "entry": {
+          "name": "The Apothecary Diaries",
+          "jpdbUrl": "https://jpdb.io/anime/13/the-apothecary-diaries",
+          "lengthInWords": 28000,
+          "uniqueWords": 3200,
+          "uniqueWordsUsedOnce": 1300,
+          "uniqueWordsUsedOncePercent": 41,
+          "uniqueKanji": 1100,
+          "uniqueKanjiUsedOnce": 300,
+          "uniqueKanjiReadings": 1600,
+          "averageDifficulty": 80,
+          "peakDifficulty90thPercentile": 99
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title"
+      },
+      "matchedLearnNatively": {
+        "entry": {
+          "learnnativelyUrl": "https://learnnatively.com/season/the-apothecary-diaries/",
+          "name": "The Apothecary Diaries",
+          "level": "L28"
+        },
+        "matchScore": 0.98,
+        "matchReason": "exact-title",
+        "jlptEquivalent": "N1+",
+        "levelNumber": 28
+      }
+    },
+    {
+      "entry": {
+        "source": "anilist",
+        "id": 4,
+        "status": "PAUSED",
+        "score": 40,
+        "progress": 8,
+        "media": {
+          "id": 14,
+          "anilistId": 14,
+          "myanimelistId": 114,
+          "episodes": 24,
+          "releasedEpisodes": 10,
+          "averageScore": 76,
+          "popularity": 12000,
+          "status": "RELEASING",
+          "genres": ["Sports"],
+          "format": "TV",
+          "siteUrl": "https://anilist.co/anime/14",
+          "synonyms": ["Chihayafuru"],
+          "coverImage": {
+            "large": "https://example.com/four.jpg",
+            "color": "#3377aa"
+          },
+          "title": {
+            "primary": "Chihayafuru",
+            "english": "Chihayafuru",
+            "native": "ちはやふる"
+          }
+        }
+      },
+      "matchedJimaku": null,
+      "alternates": [],
+      "matchScore": null,
+      "matchReason": null,
+      "isAmbiguous": false,
+      "completeness": "unknown"
+    }
+  ]
+}
