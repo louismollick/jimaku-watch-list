@@ -16,9 +16,14 @@ export function AnimeListHero({
   isPending: boolean
   lookupState: {
     ok: boolean
+    code?: string
     fetchedAt?: string
     message?: string
     totalAnime?: number
+    userListAnimeCount?: number
+    browseMeta?: {
+      isGlobalBrowse: boolean
+    }
   } | null
   searchState: LookupSearchState
   updateSearchState: (

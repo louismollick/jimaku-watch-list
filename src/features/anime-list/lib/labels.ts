@@ -2,6 +2,7 @@ import type {
   AnimeSource,
   DifficultyFilterMode,
   MediaStatus,
+  MyAnimeFilterMode,
   SortDirection,
   SortOption,
   SubtitleAvailabilityOption,
@@ -37,6 +38,12 @@ export const sortOptionLabels: Record<SortOption, string> = {
 export const sortDirectionLabels: Record<SortDirection, string> = {
   desc: "Desc",
   asc: "Asc",
+}
+
+export const myAnimeFilterModeLabels: Record<MyAnimeFilterMode, string> = {
+  onlyMine: "Only show my anime",
+  showAll: "Show all anime",
+  hideMine: "Hide my anime",
 }
 
 export const sourceFavicons: Record<AnimeSource, string> = {

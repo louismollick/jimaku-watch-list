@@ -6,6 +6,7 @@ import {
 import {
   defaultLookupSearchState,
   type LookupSearchState,
+  serializeAnimeFormatValues,
   serializeGenreValues,
   serializeSelectedValues,
 } from "@/features/anime-list/lib/anime-list-search-state"
@@ -30,6 +31,7 @@ export function canonicalizeLookupSearch(search: LookupSearchState) {
     search.selectedMediaStatuses,
     mediaStatuses
   )
+  const normalizedFormats = serializeAnimeFormatValues(search.selectedFormats)
   const normalizedSubtitleAvailability = serializeSelectedValues(
     search.selectedSubtitleAvailability,
     subtitleAvailabilityOptions
@@ -39,9 +41,16 @@ export function canonicalizeLookupSearch(search: LookupSearchState) {
   if (search.source !== defaultLookupSearchState.source)
     canonicalSearch.source = search.source
   if (search.username.trim()) canonicalSearch.username = search.username.trim()
+  if (
+    search.myAnimeFilterMode !== defaultLookupSearchState.myAnimeFilterMode &&
+    search.source === "anilist"
+  ) {
+    canonicalSearch.myAnimeFilterMode = search.myAnimeFilterMode
+  }
   if (search.titleQuery.trim())
     canonicalSearch.titleQuery = search.titleQuery.trim()
   if (
+    search.myAnimeFilterMode !== "hideMine" &&
     !arraysEqual(normalizedStatuses, defaultLookupSearchState.selectedStatuses)
   ) {
     canonicalSearch.selectedStatuses = normalizedStatuses
@@ -53,6 +62,11 @@ export function canonicalizeLookupSearch(search: LookupSearchState) {
     )
   ) {
     canonicalSearch.selectedMediaStatuses = normalizedMediaStatuses
+  }
+  if (
+    !arraysEqual(normalizedFormats, defaultLookupSearchState.selectedFormats)
+  ) {
+    canonicalSearch.selectedFormats = normalizedFormats
   }
   const normalizedGenres = serializeGenreValues(search.selectedGenres)
   if (normalizedGenres.length > 0)
@@ -71,6 +85,19 @@ export function canonicalizeLookupSearch(search: LookupSearchState) {
     defaultLookupSearchState.difficultyFilterMode
   ) {
     canonicalSearch.difficultyFilterMode = search.difficultyFilterMode
+  }
+  if (!rangesEqual(search.yearRange, defaultLookupSearchState.yearRange)) {
+    canonicalSearch.yearRange = search.yearRange
+  }
+  if (
+    !rangesEqual(search.episodeRange, defaultLookupSearchState.episodeRange)
+  ) {
+    canonicalSearch.episodeRange = search.episodeRange
+  }
+  if (
+    !rangesEqual(search.durationRange, defaultLookupSearchState.durationRange)
+  ) {
+    canonicalSearch.durationRange = search.durationRange
   }
   if (
     !rangesEqual(

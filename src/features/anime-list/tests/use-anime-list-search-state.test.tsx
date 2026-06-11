@@ -77,4 +77,37 @@ describe("useAnimeListSearchState", () => {
 
     expect(result.current.activeSearchState.username).toBe("second-user")
   })
+
+  it("restores watch statuses after leaving hideMine", () => {
+    const { result } = renderHook(() => useAnimeListSearchState({}))
+
+    act(() => {
+      result.current.updateSearchState((previousState) => ({
+        ...previousState,
+        selectedStatuses: ["CURRENT"],
+      }))
+    })
+
+    act(() => {
+      result.current.updateSearchState((previousState) => ({
+        ...previousState,
+        myAnimeFilterMode: "hideMine",
+      }))
+    })
+
+    expect(result.current.activeSearchState.selectedStatuses).toEqual(
+      defaultLookupSearchState.selectedStatuses
+    )
+
+    act(() => {
+      result.current.updateSearchState((previousState) => ({
+        ...previousState,
+        myAnimeFilterMode: "showAll",
+      }))
+    })
+
+    expect(result.current.activeSearchState.selectedStatuses).toEqual([
+      "CURRENT",
+    ])
+  })
 })

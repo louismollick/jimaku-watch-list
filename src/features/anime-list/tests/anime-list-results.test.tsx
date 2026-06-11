@@ -16,7 +16,7 @@ describe("AnimeListResults", () => {
     fireEvent.change(await screen.findByLabelText(/anime title/i), {
       target: { value: "orb" },
     })
-    expect(await screen.findByText("Showing 0 results")).toBeInTheDocument()
+    expect(await screen.findByText("Showing 1 result")).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole("tab", { name: /asc/i }))
     fireEvent.change(screen.getByLabelText(/anime title/i), {
@@ -24,7 +24,7 @@ describe("AnimeListResults", () => {
     })
 
     await waitFor(() =>
-      expect(screen.getByText("Showing 1 result")).toBeInTheDocument()
+      expect(screen.getByText("Showing 2 results")).toBeInTheDocument()
     )
   })
 
@@ -39,6 +39,18 @@ describe("AnimeListResults", () => {
     })
 
     expect(await screen.findByText("Nope")).toBeInTheDocument()
+  })
+
+  it("renders metadata filters for format, year, episodes, and duration", async () => {
+    renderAnimeList({
+      lookup: vi.fn().mockResolvedValue(successResponse()),
+      searchState: { username: "mollicl" },
+    })
+
+    expect(await screen.findByText("Format")).toBeInTheDocument()
+    expect(screen.getByText("Year")).toBeInTheDocument()
+    expect(screen.getByText("Episodes")).toBeInTheDocument()
+    expect(screen.getByText("Duration")).toBeInTheDocument()
   })
 
   it("opens mobile drawer with metadata on card tap", async () => {

@@ -1,5 +1,7 @@
+import { normalizeAnimeFormat } from "@/features/anime-list/lib/anime-metadata-filters"
 import {
   fetchAniListIdsForMyAnimeListIds,
+  fetchAniListMetadataForAniListIds,
   fetchReleasedEpisodesForAniListIds,
 } from "@/lib/anilist-id-map"
 import type {
@@ -167,6 +169,14 @@ export async function fetchMyAnimeListEntries(
     )
 
     let aniListIdsByMyAnimeListId = new Map<number, number | null>()
+    let metadataByAniListId = new Map<
+      number,
+      {
+        year: number | null
+        duration: number | null
+        format: string | null
+      }
+    >()
     let releasedEpisodesByAniListId = new Map<number, number | null>()
 
     try {
@@ -180,14 +190,18 @@ export async function fetchMyAnimeListEntries(
 
       releasedEpisodesByAniListId =
         await fetchReleasedEpisodesForAniListIds(aniListIds)
+      metadataByAniListId = await fetchAniListMetadataForAniListIds(aniListIds)
     } catch {
       aniListIdsByMyAnimeListId = new Map<number, number | null>()
+      metadataByAniListId = new Map()
       releasedEpisodesByAniListId = new Map<number, number | null>()
     }
 
     return filteredEntries.map((entry) => {
       const mediaStatus = normalizeMyAnimeListMediaStatus(entry.node.status)
       const anilistId = aniListIdsByMyAnimeListId.get(entry.node.id) ?? null
+      const enrichedMetadata =
+        anilistId !== null ? metadataByAniListId.get(anilistId) : undefined
 
       return {
         source: "myanimelist" as const,
@@ -211,7 +225,11 @@ export async function fetchMyAnimeListEntries(
           popularity: entry.node.num_list_users ?? null,
           status: mediaStatus,
           genres: entry.node.genres?.map((genre) => genre.name) ?? [],
-          format: entry.node.media_type?.toUpperCase() ?? null,
+          format:
+            enrichedMetadata?.format ??
+            normalizeAnimeFormat(entry.node.media_type ?? null),
+          year: enrichedMetadata?.year ?? null,
+          duration: enrichedMetadata?.duration ?? null,
           siteUrl: toProviderUrl(entry.node.id),
           synonyms: entry.node.alternative_titles?.synonyms ?? [],
           coverImage: {

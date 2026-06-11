@@ -28,6 +28,8 @@ const baseAniListEntry: AnimeEntry = {
     status: "FINISHED",
     genres: ["Drama"],
     format: "TV",
+    year: 2016,
+    duration: 25,
     siteUrl: "https://anilist.co/anime/101",
     synonyms: ["March Comes in Like a Lion"],
     coverImage: {

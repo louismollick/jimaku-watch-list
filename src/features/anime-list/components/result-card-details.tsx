@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { FieldLabel } from "@/components/ui/field-label"
 import type { OverlapResult } from "@/features/anime-list/domain/lookup-response"
 import { getMediaStatusLabel } from "@/features/anime-list/lib/labels"
+import { statusLabel } from "@/lib/status"
 
 export function ResultCardDetails({ result }: { result: OverlapResult }) {
   return (
@@ -14,6 +15,14 @@ export function ResultCardDetails({ result }: { result: OverlapResult }) {
         <InfoItem
           label="Jimaku Files"
           value={result.matchedJimaku?.fileCount ?? 0}
+        />
+        <InfoItem
+          label="List Status"
+          value={
+            result.userList.status
+              ? statusLabel[result.userList.status]
+              : "Off List"
+          }
         />
         {result.matchedJpdb ? (
           <>

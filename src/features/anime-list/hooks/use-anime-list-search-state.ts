@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import {
   defaultLookupSearchState,
   type LookupSearchState,
@@ -18,6 +18,9 @@ export function useAnimeListSearchState({
   const [localSearchState, setLocalSearchState] = useState(
     () => searchState ?? defaultLookupSearchState
   )
+  const hiddenStatusesRef = useRef<
+    LookupSearchState["selectedStatuses"] | null
+  >(null)
 
   useEffect(() => {
     if (!isControlled && searchState) {
@@ -29,12 +32,44 @@ export function useAnimeListSearchState({
 
   const updateSearchState = useCallback(
     (updater: (previousState: LookupSearchState) => LookupSearchState) => {
+      const wrapUpdater = (previousState: LookupSearchState) => {
+        const nextState = updater(previousState)
+
+        if (
+          previousState.myAnimeFilterMode !== "hideMine" &&
+          nextState.myAnimeFilterMode === "hideMine"
+        ) {
+          hiddenStatusesRef.current = previousState.selectedStatuses
+
+          return {
+            ...nextState,
+            selectedStatuses: defaultLookupSearchState.selectedStatuses,
+          }
+        }
+
+        if (
+          previousState.myAnimeFilterMode === "hideMine" &&
+          nextState.myAnimeFilterMode !== "hideMine" &&
+          hiddenStatusesRef.current
+        ) {
+          const restoredStatuses = hiddenStatusesRef.current
+          hiddenStatusesRef.current = null
+
+          return {
+            ...nextState,
+            selectedStatuses: restoredStatuses,
+          }
+        }
+
+        return nextState
+      }
+
       if (isControlled) {
-        onSearchStateChange(updater)
+        onSearchStateChange(wrapUpdater)
         return
       }
 
-      setLocalSearchState(updater)
+      setLocalSearchState(wrapUpdater)
     },
     [isControlled, onSearchStateChange]
   )

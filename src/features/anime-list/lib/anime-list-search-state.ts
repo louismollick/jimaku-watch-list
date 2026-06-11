@@ -1,23 +1,31 @@
 import type {
+  AnimeFormat,
   AnimeSource,
   DifficultyFilterMode,
   MediaStatus,
+  MyAnimeFilterMode,
   SortDirection,
   SortOption,
   SubtitleAvailabilityOption,
   WatchStatus,
 } from "@/features/anime-list/domain/anime-list-enums"
 import { mediaStatuses } from "@/features/anime-list/domain/anime-list-enums"
+import { serializeAnimeFormatValues } from "@/features/anime-list/lib/anime-metadata-filters"
 import type { NumericRange } from "@/features/anime-list/lib/range-utils"
 
 export type LookupSearchState = {
   source: AnimeSource
   username: string
+  myAnimeFilterMode: MyAnimeFilterMode
   titleQuery: string
   selectedStatuses: WatchStatus[]
   selectedMediaStatuses: Exclude<MediaStatus, null>[]
+  selectedFormats: AnimeFormat[]
   selectedGenres: string[]
   selectedSubtitleAvailability: SubtitleAvailabilityOption[]
+  yearRange: NumericRange | null
+  episodeRange: NumericRange | null
+  durationRange: NumericRange | null
   difficultyFilterMode: DifficultyFilterMode
   jpdbDifficultyRange: NumericRange | null
   learnNativelyLevelRange: NumericRange | null
@@ -29,11 +37,16 @@ export type LookupSearchState = {
 export const defaultLookupSearchState: LookupSearchState = {
   source: "anilist",
   username: "",
+  myAnimeFilterMode: "onlyMine",
   titleQuery: "",
   selectedStatuses: ["PLANNING", "PAUSED"],
   selectedMediaStatuses: [...mediaStatuses],
+  selectedFormats: [],
   selectedGenres: [],
   selectedSubtitleAvailability: ["all"],
+  yearRange: null,
+  episodeRange: null,
+  durationRange: null,
   difficultyFilterMode: "none",
   jpdbDifficultyRange: null,
   learnNativelyLevelRange: null,
@@ -63,3 +76,5 @@ export function serializeGenreValues(values: Iterable<string>) {
     ),
   ].sort((left, right) => left.localeCompare(right))
 }
+
+export { serializeAnimeFormatValues }

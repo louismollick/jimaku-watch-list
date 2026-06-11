@@ -21,7 +21,7 @@ export function ResultCardSummary({ result }: { result: OverlapResult }) {
       </div>
       <div className="space-y-3 px-0.5">
         <div className="flex items-start gap-2.5">
-          <StatusDot status={result.entry.status} />
+          <StatusIndicator result={result} />
           <div className="min-w-0 flex-1 space-y-1">
             <h3 className="line-clamp-2 h-10 text-sm font-medium leading-5 text-muted-foreground">
               {getResultTitle(result)}
@@ -36,6 +36,14 @@ export function ResultCardSummary({ result }: { result: OverlapResult }) {
       </div>
     </div>
   )
+}
+
+function StatusIndicator({ result }: { result: OverlapResult }) {
+  if (!result.userList.status) {
+    return null
+  }
+
+  return <StatusDot status={result.userList.status} />
 }
 
 function StatusDot({ status }: { status: keyof typeof statusLabel }) {

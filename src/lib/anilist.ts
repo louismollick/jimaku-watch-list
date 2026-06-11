@@ -1,3 +1,5 @@
+import { normalizeAnimeFormat } from "@/features/anime-list/lib/anime-metadata-filters"
+import { getAniListRateLimitMeta } from "@/lib/anilist-rate-limit"
 import type {
   AnimeEntry,
   LookupResponse,
@@ -20,6 +22,8 @@ const mediaListCollectionQuery = `
             id
             idMal
             episodes
+            seasonYear
+            duration
             averageScore
             popularity
             status
@@ -61,6 +65,8 @@ type AniListGraphQlEntry = {
     id: number
     idMal: number | null
     episodes: number | null
+    seasonYear: number | null
+    duration: number | null
     averageScore: number | null
     popularity: number | null
     status: MediaStatus
@@ -141,10 +147,17 @@ export async function fetchAniListEntries(
   })
 
   if (response.status === 429) {
+    const rateLimit = getAniListRateLimitMeta(response.headers)
+
     return {
       ok: false,
       code: "RATE_LIMITED",
       message: "AniList rate limit hit. Wait a moment and try again.",
+      retryAfterMs: rateLimit.retryAfterMs,
+      resetAtMs: rateLimit.resetAtMs,
+      cooldownUntilMs: rateLimit.cooldownUntilMs,
+      rateLimitLimit: rateLimit.rateLimitLimit,
+      rateLimitRemaining: rateLimit.rateLimitRemaining,
     }
   }
 
@@ -210,7 +223,9 @@ export async function fetchAniListEntries(
         popularity: entry.media.popularity,
         status: entry.media.status,
         genres: entry.media.genres,
-        format: entry.media.format,
+        format: normalizeAnimeFormat(entry.media.format),
+        year: entry.media.seasonYear,
+        duration: entry.media.duration,
         siteUrl: entry.media.siteUrl,
         synonyms: entry.media.synonyms,
         coverImage: entry.media.coverImage,

@@ -1,6 +1,12 @@
 import { learnNativelyJlptEquivalents } from "@/features/anime-list/domain/anime-list-enums"
 import type { LookupResponse } from "@/features/anime-list/domain/lookup-response"
 import {
+  durationFilterBounds,
+  episodeFilterBounds,
+  getAnimeFormatOptions,
+  getYearFilterBounds,
+} from "@/features/anime-list/lib/anime-metadata-filters"
+import {
   getNumericBounds,
   type NumericRange,
 } from "@/features/anime-list/lib/range-utils"
@@ -8,6 +14,10 @@ import { normalizeGenreValue } from "@/features/anime-list/lib/result-presenters
 
 export type AnimeListFacets = {
   availableGenres: Array<{ label: string; value: string }>
+  availableFormats: Array<{ label: string; value: string }>
+  availableYearBounds: NumericRange
+  availableEpisodeBounds: NumericRange
+  availableDurationBounds: NumericRange
   availableJpdbDifficultyBounds: NumericRange | null
   availableLearnNativelyLevelBounds: NumericRange | null
   availableLearnNativelyJlptBounds: NumericRange | null
@@ -19,6 +29,10 @@ export function deriveAnimeListFacets(
   if (!lookupState?.ok) {
     return {
       availableGenres: [],
+      availableFormats: getAnimeFormatOptions(),
+      availableYearBounds: getYearFilterBounds(),
+      availableEpisodeBounds: episodeFilterBounds,
+      availableDurationBounds: durationFilterBounds,
       availableJpdbDifficultyBounds: null,
       availableLearnNativelyLevelBounds: null,
       availableLearnNativelyJlptBounds: null,
@@ -43,6 +57,10 @@ export function deriveAnimeListFacets(
 
   return {
     availableGenres,
+    availableFormats: getAnimeFormatOptions(),
+    availableYearBounds: getYearFilterBounds(),
+    availableEpisodeBounds: episodeFilterBounds,
+    availableDurationBounds: durationFilterBounds,
     availableJpdbDifficultyBounds: getNumericBounds(
       lookupState.results
         .map((result) => result.matchedJpdb?.entry.averageDifficulty)

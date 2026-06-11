@@ -24,6 +24,8 @@ const finishedEntry: AnimeEntry = {
     status: "FINISHED",
     genres: ["Action"],
     format: "TV",
+    year: 2014,
+    duration: 23,
     siteUrl: "https://anilist.co/anime/201",
     synonyms: [],
     coverImage: {

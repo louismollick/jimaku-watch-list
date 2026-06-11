@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   fetchAniListIdsForMyAnimeListIds,
+  fetchAniListMetadataForAniListIds,
   fetchMyAnimeListIdsForAniListIds,
   fetchReleasedEpisodesForAniListIds,
 } from "@/lib/anilist-id-map"
@@ -119,6 +120,37 @@ describe("anilist id map", () => {
       new Map([
         [1, 8],
         [2, 24],
+      ])
+    )
+  })
+
+  it("returns AniList metadata enrichment fields", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        data: {
+          entry0: {
+            id: 1,
+            seasonYear: 2024,
+            duration: 24,
+            format: "TV",
+          },
+        },
+      }),
+    }) as typeof fetch
+
+    await expect(fetchAniListMetadataForAniListIds([1])).resolves.toEqual(
+      new Map([
+        [
+          1,
+          {
+            year: 2024,
+            duration: 24,
+            format: "TV",
+          },
+        ],
       ])
     )
   })

@@ -17,21 +17,21 @@ const absoluteTimeFormatter = new Intl.DateTimeFormat(undefined, {
 
 function formatRelativeFetchedAt(value: string, now: number) {
   const fetchedAt = new Date(value).getTime()
-  if (Number.isNaN(fetchedAt)) return "fetched recently"
+  if (Number.isNaN(fetchedAt)) return "cached recently"
   const elapsedSeconds = Math.round((now - fetchedAt) / 1000)
-  if (Math.abs(elapsedSeconds) < 60) return "fetched just now"
+  if (Math.abs(elapsedSeconds) < 60) return "cached just now"
   if (Math.abs(elapsedSeconds) < 3600)
-    return `fetched ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 60), "minute")}`
+    return `cached ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 60), "minute")}`
   if (Math.abs(elapsedSeconds) < 86400)
-    return `fetched ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 3600), "hour")}`
-  return `fetched ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 86400), "day")}`
+    return `cached ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 3600), "hour")}`
+  return `cached ${relativeTimeFormatter.format(Math.round(-elapsedSeconds / 86400), "day")}`
 }
 
 function formatAbsoluteFetchedAt(value: string) {
   const fetchedAt = new Date(value)
   return Number.isNaN(fetchedAt.getTime())
-    ? "Fetch time unavailable."
-    : `Fetched ${absoluteTimeFormatter.format(fetchedAt)}.`
+    ? "Cache time unavailable."
+    : `Cached ${absoluteTimeFormatter.format(fetchedAt)}.`
 }
 
 function formatCacheTtl(ttlSeconds: number) {
@@ -67,7 +67,7 @@ export function LookupFreshness({ fetchedAt }: { fetchedAt: string }) {
       <TooltipContent className="max-w-64 text-left leading-5">
         <p>{formatAbsoluteFetchedAt(fetchedAt)}</p>
         <p>
-          Lookups are cached per user for{" "}
+          The user-list lookup result is cached per user for{" "}
           {formatCacheTtl(successLookupTtlSeconds)}.
         </p>
       </TooltipContent>

@@ -1,3 +1,5 @@
+import { normalizeAnimeFormat } from "@/features/anime-list/lib/anime-metadata-filters"
+
 const anilistEndpoint = "https://graphql.anilist.co"
 const batchSize = 50
 const batchDelayMs = 250
@@ -14,6 +16,9 @@ type MappingResponse = {
     {
       id: number | null
       idMal: number | null
+      seasonYear?: number | null
+      duration?: number | null
+      format?: string | null
       episodes?: number | null
       status?: "FINISHED" | "RELEASING" | "CANCELLED" | "HIATUS" | null
       nextAiringEpisode?: {
@@ -195,5 +200,28 @@ export async function fetchReleasedEpisodesForAniListIds(
 
       return [anilistId, null]
     })
+  )
+}
+
+export async function fetchAniListMetadataForAniListIds(
+  ids: number[],
+  options?: FetchMappingsOptions
+) {
+  const result = await fetchMediaEntries(
+    ids,
+    "id",
+    "id seasonYear duration format",
+    options
+  )
+
+  return new Map(
+    [...result.entries()].map(([anilistId, mapping]) => [
+      anilistId,
+      {
+        year: mapping?.seasonYear ?? null,
+        duration: mapping?.duration ?? null,
+        format: normalizeAnimeFormat(mapping?.format ?? null),
+      },
+    ])
   )
 }

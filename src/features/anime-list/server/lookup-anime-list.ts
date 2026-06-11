@@ -69,6 +69,7 @@ export async function findAnimeListOverlap(
     username: trimmedUsername,
     fetchedAt: new Date().toISOString(),
     totalAnime: entryResult.length,
+    userListAnimeCount: entryResult.length,
     matchedCount: results.filter((result) => result.matchedJimaku).length,
     results,
   } satisfies LookupResponse

@@ -23,6 +23,7 @@ function stringifySearch(search: Record<string, unknown>) {
     selectedMediaStatuses: lowercaseSearchParamValue(
       search.selectedMediaStatuses
     ),
+    selectedFormats: lowercaseSearchParamValue(search.selectedFormats),
     selectedSubtitleAvailability: lowercaseSearchParamValue(
       search.selectedSubtitleAvailability
     ),

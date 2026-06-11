@@ -42,4 +42,46 @@ describe("filter-anime-list-results", () => {
       ).map((result) => result.entry.id)
     ).toEqual([1])
   })
+
+  it("filters list mode by format and metadata ranges", () => {
+    const response = successResponse()
+    if (!response.ok) throw new Error("expected success response")
+    const facets = deriveAnimeListFacets(response)
+
+    expect(
+      filterAnimeListResults(
+        response.results,
+        {
+          ...defaultLookupSearchState,
+          selectedFormats: ["MOVIE"],
+          yearRange: [2024, 2024],
+          episodeRange: [0, 150],
+          durationRange: [90, 180],
+        },
+        facets
+      ).map((result) => result.entry.id)
+    ).toEqual([2])
+  })
+
+  it("does not locally re-apply metadata filters in global browse mode", () => {
+    const response = successResponse()
+    if (!response.ok) throw new Error("expected success response")
+    const facets = deriveAnimeListFacets(response)
+
+    expect(
+      filterAnimeListResults(
+        response.results,
+        {
+          ...defaultLookupSearchState,
+          myAnimeFilterMode: "showAll",
+          selectedFormats: ["MOVIE"],
+          yearRange: [2024, 2024],
+          episodeRange: [0, 150],
+          durationRange: [90, 180],
+          selectedStatuses: ["CURRENT", "PLANNING", "PAUSED"],
+        },
+        facets
+      ).map((result) => result.entry.id)
+    ).toEqual([1, 2, 3])
+  })
 })

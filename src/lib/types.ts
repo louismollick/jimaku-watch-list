@@ -16,6 +16,15 @@ export const mediaStatuses = [
 ] as const
 
 export const mediaStatusesAll = [...mediaStatuses, "NOT_YET_RELEASED"] as const
+export const animeFormats = [
+  "TV",
+  "TV_SHORT",
+  "MOVIE",
+  "SPECIAL",
+  "OVA",
+  "ONA",
+  "MUSIC",
+] as const
 
 export const sortOptions = [
   "averageScore",
@@ -33,6 +42,7 @@ export const difficultyFilterModes = [
   "learnNativelyLevel",
   "learnNativelyJlptEquivalent",
 ] as const
+export const myAnimeFilterModes = ["onlyMine", "showAll", "hideMine"] as const
 export const learnNativelyJlptEquivalents = [
   "N5",
   "N4",
@@ -49,9 +59,11 @@ export type SortDirection = (typeof sortDirections)[number]
 export type SubtitleAvailabilityOption =
   (typeof subtitleAvailabilityOptions)[number]
 export type DifficultyFilterMode = (typeof difficultyFilterModes)[number]
+export type MyAnimeFilterMode = (typeof myAnimeFilterModes)[number]
 export type LearnNativelyJlptEquivalent =
   (typeof learnNativelyJlptEquivalents)[number]
 export type MediaStatus = (typeof mediaStatusesAll)[number] | null
+export type AnimeFormat = (typeof animeFormats)[number]
 
 export type AnimeTitle = {
   primary: string | null
@@ -70,6 +82,8 @@ export type AnimeMedia = {
   status: MediaStatus
   genres: string[]
   format: string | null
+  year: number | null
+  duration: number | null
   siteUrl: string
   synonyms: string[]
   coverImage: {
@@ -82,10 +96,17 @@ export type AnimeMedia = {
 export type AnimeEntry = {
   source: AnimeSource
   id: number
-  status: WatchStatus
+  status: WatchStatus | null
   score: number | null
   progress: number | null
   media: AnimeMedia
+}
+
+export type UserListState = {
+  inList: boolean
+  status: WatchStatus | null
+  score: number | null
+  progress: number | null
 }
 
 export type JimakuEntry = {
@@ -151,6 +172,7 @@ export type Completeness = "complete" | "incomplete" | "unknown"
 
 export type OverlapResult = {
   entry: AnimeEntry
+  userList: UserListState
   matchedJimaku: JimakuEntry | null
   alternates: MatchCandidate[]
   matchScore: number | null
@@ -168,8 +190,20 @@ export type LookupResponse =
       username: string
       fetchedAt: string
       totalAnime: number
+      userListAnimeCount?: number
       matchedCount: number
       results: OverlapResult[]
+      pageInfo?: {
+        currentPage: number
+        hasNextPage: boolean
+        total: number | null
+      }
+      browseMeta?: {
+        mode: MyAnimeFilterMode
+        isGlobalBrowse: boolean
+        isApproximateWatchStatusSort: boolean
+        isAniListBrowseCap: boolean
+      }
     }
   | {
       ok: false
@@ -179,4 +213,9 @@ export type LookupResponse =
         | "RATE_LIMITED"
         | "UPSTREAM_ERROR"
       message: string
+      retryAfterMs?: number
+      resetAtMs?: number
+      cooldownUntilMs?: number
+      rateLimitLimit?: number
+      rateLimitRemaining?: number
     }

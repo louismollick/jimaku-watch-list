@@ -24,6 +24,8 @@
           "status": "FINISHED",
           "genres": ["Romance", "Sports"],
           "format": "TV",
+          "year": 2024,
+          "duration": 24,
           "siteUrl": "https://anilist.co/anime/11",
           "synonyms": [],
           "coverImage": {
@@ -36,6 +38,12 @@
             "native": "アオのハコ"
           }
         }
+      },
+      "userList": {
+        "inList": true,
+        "status": "CURRENT",
+        "score": 70,
+        "progress": 3
       },
       "matchedJimaku": {
         "id": 101,
@@ -96,21 +104,33 @@
           "id": 12,
           "anilistId": 12,
           "myanimelistId": 112,
-          "episodes": 24,
-          "releasedEpisodes": 24,
+          "episodes": 1,
+          "releasedEpisodes": 1,
           "averageScore": 90,
           "popularity": 45000,
           "status": "FINISHED",
           "genres": ["Drama", "Historical"],
-          "format": "TV",
+          "format": "MOVIE",
+          "year": 2024,
+          "duration": 125,
           "siteUrl": "https://anilist.co/anime/12",
           "synonyms": [],
           "coverImage": {
             "large": "https://example.com/two.jpg",
             "color": "#edb63f"
           },
-          "title": { "primary": "Orb", "english": "Orb", "native": "チ。" }
+          "title": {
+            "primary": "Orb",
+            "english": "Orb",
+            "native": "チ。"
+          }
         }
+      },
+      "userList": {
+        "inList": true,
+        "status": "PLANNING",
+        "score": 60,
+        "progress": 0
       },
       "matchedJimaku": {
         "id": 102,
@@ -130,7 +150,7 @@
       "matchScore": 1,
       "matchReason": "anilist-id",
       "isAmbiguous": false,
-      "completeness": "incomplete",
+      "completeness": "complete",
       "matchedJpdb": {
         "entry": {
           "name": "Orb",
@@ -177,7 +197,9 @@
           "popularity": 55000,
           "status": "FINISHED",
           "genres": ["Drama", "Mystery"],
-          "format": "TV",
+          "format": "TV_SHORT",
+          "year": 2023,
+          "duration": 12,
           "siteUrl": "https://anilist.co/anime/13",
           "synonyms": [],
           "coverImage": {
@@ -190,6 +212,12 @@
             "native": "薬屋のひとりごと"
           }
         }
+      },
+      "userList": {
+        "inList": true,
+        "status": "PLANNING",
+        "score": 88,
+        "progress": 0
       },
       "matchedJimaku": {
         "id": 103,
@@ -250,13 +278,15 @@
           "id": 14,
           "anilistId": 14,
           "myanimelistId": 114,
-          "episodes": 24,
+          "episodes": 200,
           "releasedEpisodes": 10,
           "averageScore": 76,
           "popularity": 12000,
           "status": "RELEASING",
           "genres": ["Sports"],
-          "format": "TV",
+          "format": "OVA",
+          "year": 2011,
+          "duration": 5,
           "siteUrl": "https://anilist.co/anime/14",
           "synonyms": ["Chihayafuru"],
           "coverImage": {
@@ -269,6 +299,12 @@
             "native": "ちはやふる"
           }
         }
+      },
+      "userList": {
+        "inList": true,
+        "status": "PAUSED",
+        "score": 40,
+        "progress": 8
       },
       "matchedJimaku": null,
       "alternates": [],

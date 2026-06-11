@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import type { LookupResponse } from "@/features/anime-list/domain/lookup-response"
 import { useAnimeListLookup } from "@/features/anime-list/hooks/use-anime-list-lookup"
 import { useAnimeListSearchState } from "@/features/anime-list/hooks/use-anime-list-search-state"
-import { useAutoLookup } from "@/features/anime-list/hooks/use-auto-lookup"
+import { useDebouncedValue } from "@/features/anime-list/hooks/use-debounced-value"
 import {
   getActiveDifficultyBounds,
   getActiveDifficultyRange,
@@ -19,6 +19,8 @@ export type AnimeListLookup = (input: {
 }) => Promise<LookupResponse>
 
 export type AnimeListController = ReturnType<typeof useAnimeListController>
+
+const browseDebounceMs = 350
 
 export function useAnimeListController({
   autoLookupIdentity = null,
@@ -37,12 +39,57 @@ export function useAnimeListController({
     onSearchStateChange,
     searchState,
   })
-  const { isPending, lookupState, runLookup } = useAnimeListLookup(lookup)
+  const [browsePage, setBrowsePage] = useState(1)
+  const {
+    cancelAniListRetry,
+    isPending,
+    lookupState,
+    lookupStatus,
+    runBrowse,
+    runLookup,
+  } = useAnimeListLookup(lookup)
   const facets = useMemo(
     () => deriveAnimeListFacets(lookupState),
     [lookupState]
   )
   const activeLookupIdentity = getLookupIdentity(activeSearchState)
+  const isGlobalAniListBrowse =
+    activeSearchState.source === "anilist" &&
+    activeSearchState.myAnimeFilterMode !== "onlyMine"
+  const browseQueryKey = useMemo(
+    () =>
+      JSON.stringify({
+        titleQuery: activeSearchState.titleQuery.trim(),
+        myAnimeFilterMode: activeSearchState.myAnimeFilterMode,
+        selectedGenres: activeSearchState.selectedGenres,
+        selectedMediaStatuses: activeSearchState.selectedMediaStatuses,
+        selectedFormats: activeSearchState.selectedFormats,
+        selectedSubtitleAvailability:
+          activeSearchState.selectedSubtitleAvailability,
+        yearRange: activeSearchState.yearRange,
+        episodeRange: activeSearchState.episodeRange,
+        durationRange: activeSearchState.durationRange,
+        sortBy: activeSearchState.sortBy,
+        sortDirection: activeSearchState.sortDirection,
+        source: activeSearchState.source,
+        username: activeSearchState.username.trim().toLowerCase(),
+      }),
+    [activeSearchState]
+  )
+  const debouncedBrowseSearchState = useDebouncedValue(
+    activeSearchState,
+    browseDebounceMs
+  )
+  const browseSearchStateForRequest =
+    browsePage === 1 ? debouncedBrowseSearchState : activeSearchState
+  const browseRequestKey = useMemo(
+    () =>
+      JSON.stringify({
+        page: browsePage,
+        searchState: browseSearchStateForRequest,
+      }),
+    [browsePage, browseSearchStateForRequest]
+  )
 
   useEffect(() => {
     updateSearchState((previousState) =>
@@ -50,13 +97,80 @@ export function useAnimeListController({
     )
   }, [facets, updateSearchState])
 
-  useAutoLookup({
+  useEffect(() => {
+    if (
+      activeSearchState.myAnimeFilterMode === "hideMine" &&
+      activeSearchState.sortBy === "status"
+    ) {
+      updateSearchState((previousState) => ({
+        ...previousState,
+        sortBy: "averageScore",
+      }))
+    }
+  }, [
+    activeSearchState.myAnimeFilterMode,
+    activeSearchState.sortBy,
+    updateSearchState,
+  ])
+
+  useEffect(() => {
+    void browseQueryKey
+
+    if (!isGlobalAniListBrowse) {
+      setBrowsePage(1)
+      return
+    }
+
+    setBrowsePage(1)
+  }, [browseQueryKey, isGlobalAniListBrowse])
+
+  useEffect(() => {
+    if (!autoLookupIdentity || isGlobalAniListBrowse) {
+      return
+    }
+
+    if (activeLookupIdentity === autoLookupIdentity) {
+      void runLookup(activeSearchState.source, activeSearchState.username)
+    }
+  }, [
     activeLookupIdentity,
+    activeSearchState.source,
+    activeSearchState.username,
     autoLookupIdentity,
+    isGlobalAniListBrowse,
     runLookup,
-    source: activeSearchState.source,
-    username: activeSearchState.username,
-  })
+  ])
+
+  useEffect(() => {
+    if (activeSearchState.source === "anilist") {
+      return
+    }
+
+    cancelAniListRetry()
+  }, [activeSearchState.source, cancelAniListRetry])
+
+  useEffect(() => {
+    void browseRequestKey
+
+    if (
+      !isGlobalAniListBrowse ||
+      !browseSearchStateForRequest.username.trim()
+    ) {
+      return
+    }
+
+    void runBrowse({
+      page: browsePage,
+      reset: browsePage === 1,
+      searchState: browseSearchStateForRequest,
+    })
+  }, [
+    browsePage,
+    browseRequestKey,
+    browseSearchStateForRequest,
+    isGlobalAniListBrowse,
+    runBrowse,
+  ])
 
   const visibleResults = useMemo(
     () =>
@@ -77,10 +191,35 @@ export function useAnimeListController({
   const handleSubmit = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault()
+      if (
+        activeSearchState.source === "anilist" &&
+        activeSearchState.myAnimeFilterMode !== "onlyMine"
+      ) {
+        setBrowsePage(1)
+        await runBrowse({
+          page: 1,
+          reset: true,
+          searchState: activeSearchState,
+        })
+        return
+      }
+
       await runLookup(activeSearchState.source, activeSearchState.username)
     },
-    [activeSearchState.source, activeSearchState.username, runLookup]
+    [activeSearchState, runBrowse, runLookup]
   )
+
+  const loadNextPage = useCallback(async () => {
+    if (
+      !isGlobalAniListBrowse ||
+      !lookupState?.ok ||
+      !lookupState.pageInfo?.hasNextPage
+    ) {
+      return
+    }
+
+    setBrowsePage((previousPage) => previousPage + 1)
+  }, [isGlobalAniListBrowse, lookupState])
 
   return {
     activeDifficultyBounds: getActiveDifficultyBounds(
@@ -92,6 +231,9 @@ export function useAnimeListController({
     handleSubmit,
     hasResultsState: lookupState?.ok === true,
     isPending,
+    isGlobalAniListBrowse,
+    lookupStatus,
+    loadNextPage,
     lookupState,
     searchState: activeSearchState,
     updateSearchState,

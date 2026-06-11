@@ -10,6 +10,10 @@ export function AnimeListPage({
 }: {
   controller: AnimeListController
 }) {
+  const showAniListRetryStatus =
+    controller.searchState.source === "anilist" &&
+    controller.lookupStatus.isRetrying
+
   return (
     <TooltipProvider>
       <main className="min-h-svh overflow-x-clip bg-[linear-gradient(180deg,_var(--background)_0%,_#0b1622_30%,_#0b1622_100%)] bg-fixed text-foreground">
@@ -27,17 +31,40 @@ export function AnimeListPage({
             searchState={controller.searchState}
             updateSearchState={controller.updateSearchState}
           />
-          {controller.hasResultsState ? (
+          {controller.hasResultsState || showAniListRetryStatus ? (
             <div className="grid gap-6 animate-in fade-in fill-mode-both duration-500 ease-out lg:grid-cols-[260px_minmax(0,1fr)]">
-              <AnimeListFilters
-                activeDifficultyBounds={controller.activeDifficultyBounds}
-                activeDifficultyRange={controller.activeDifficultyRange}
-                availableGenres={controller.facets.availableGenres}
-                searchState={controller.searchState}
-                updateSearchState={controller.updateSearchState}
-              />
+              {controller.hasResultsState ? (
+                <AnimeListFilters
+                  activeDifficultyBounds={controller.activeDifficultyBounds}
+                  activeDifficultyRange={controller.activeDifficultyRange}
+                  availableGenres={controller.facets.availableGenres}
+                  searchState={controller.searchState}
+                  updateSearchState={controller.updateSearchState}
+                />
+              ) : (
+                <div className="hidden lg:block" />
+              )}
               <AnimeListResults
+                browseMeta={
+                  controller.lookupState?.ok
+                    ? controller.lookupState.browseMeta
+                    : undefined
+                }
+                hasNextPage={
+                  controller.lookupState?.ok
+                    ? controller.lookupState.pageInfo?.hasNextPage === true
+                    : false
+                }
+                isGlobalAniListBrowse={controller.isGlobalAniListBrowse}
+                isPending={controller.isPending}
+                isRetrying={showAniListRetryStatus}
+                loadNextPage={controller.loadNextPage}
                 lookupStateOk={controller.lookupState?.ok === true}
+                retryMessage={
+                  showAniListRetryStatus
+                    ? controller.lookupStatus.retryMessage
+                    : null
+                }
                 results={controller.visibleResults}
               />
             </div>

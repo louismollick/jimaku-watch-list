@@ -13,6 +13,18 @@ export function syncRangeFilters(
     previousState.jpdbDifficultyRange,
     facets.availableJpdbDifficultyBounds
   )
+  const nextYear = normalizeStoredRange(
+    previousState.yearRange,
+    facets.availableYearBounds
+  )
+  const nextEpisode = normalizeStoredRange(
+    previousState.episodeRange,
+    facets.availableEpisodeBounds
+  )
+  const nextDuration = normalizeStoredRange(
+    previousState.durationRange,
+    facets.availableDurationBounds
+  )
   const nextLevel = normalizeStoredRange(
     previousState.learnNativelyLevelRange,
     facets.availableLearnNativelyLevelBounds
@@ -22,12 +34,18 @@ export function syncRangeFilters(
     facets.availableLearnNativelyJlptBounds
   )
 
-  return rangesEqual(previousState.jpdbDifficultyRange, nextJpdb) &&
+  return rangesEqual(previousState.yearRange, nextYear) &&
+    rangesEqual(previousState.episodeRange, nextEpisode) &&
+    rangesEqual(previousState.durationRange, nextDuration) &&
+    rangesEqual(previousState.jpdbDifficultyRange, nextJpdb) &&
     rangesEqual(previousState.learnNativelyLevelRange, nextLevel) &&
     rangesEqual(previousState.learnNativelyJlptRange, nextJlpt)
     ? previousState
     : {
         ...previousState,
+        yearRange: nextYear,
+        episodeRange: nextEpisode,
+        durationRange: nextDuration,
         jpdbDifficultyRange: nextJpdb,
         learnNativelyLevelRange: nextLevel,
         learnNativelyJlptRange: nextJlpt,

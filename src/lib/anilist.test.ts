@@ -27,6 +27,8 @@ describe("fetchAniListEntries", () => {
                     media: {
                       id: 11,
                       episodes: 12,
+                      seasonYear: 2023,
+                      duration: 24,
                       nextAiringEpisode: null,
                       averageScore: 80,
                       popularity: 1000,
@@ -54,6 +56,8 @@ describe("fetchAniListEntries", () => {
                     media: {
                       id: 10,
                       episodes: 12,
+                      seasonYear: 2023,
+                      duration: 24,
                       nextAiringEpisode: null,
                       averageScore: 80,
                       popularity: 1000,
@@ -90,6 +94,8 @@ describe("fetchAniListEntries", () => {
     expect(
       Array.isArray(result) ? result[0].media.releasedEpisodes : null
     ).toBe(12)
+    expect(Array.isArray(result) ? result[0].media.year : null).toBe(2023)
+    expect(Array.isArray(result) ? result[0].media.duration : null).toBe(24)
     expect(Array.isArray(result) ? result[0].media.genres : []).toEqual([
       "Action",
       "Drama",
@@ -133,6 +139,8 @@ describe("fetchAniListEntries", () => {
                       id: 10,
                       idMal: 20,
                       episodes: 12,
+                      seasonYear: 2020,
+                      duration: 95,
                       nextAiringEpisode: null,
                       averageScore: 80,
                       popularity: 1000,
@@ -184,6 +192,8 @@ describe("fetchAniListEntries", () => {
                       id: 10,
                       idMal: 20,
                       episodes: 12,
+                      seasonYear: 2011,
+                      duration: 24,
                       averageScore: 80,
                       popularity: 1000,
                       status: "RELEASING",
@@ -218,5 +228,34 @@ describe("fetchAniListEntries", () => {
     expect(
       Array.isArray(result) ? result[0].media.releasedEpisodes : null
     ).toBe(8)
+  })
+
+  it("returns normalized AniList rate-limit metadata", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({
+        "retry-after": "5",
+        "x-ratelimit-reset": `${Math.floor((Date.now() + 12_000) / 1000)}`,
+        "x-ratelimit-limit": "30",
+        "x-ratelimit-remaining": "0",
+      }),
+    }) as typeof fetch
+
+    const result = await fetchAniListEntries("demo")
+
+    expect(Array.isArray(result)).toBe(false)
+    expect(!Array.isArray(result) && !result.ok ? result.code : null).toBe(
+      "RATE_LIMITED"
+    )
+    expect(
+      !Array.isArray(result) && !result.ok ? result.retryAfterMs : null
+    ).toBe(5_000)
+    expect(
+      !Array.isArray(result) && !result.ok ? result.cooldownUntilMs : null
+    ).toBeGreaterThan(Date.now() + 10_000)
+    expect(
+      !Array.isArray(result) && !result.ok ? result.rateLimitLimit : null
+    ).toBe(30)
   })
 })

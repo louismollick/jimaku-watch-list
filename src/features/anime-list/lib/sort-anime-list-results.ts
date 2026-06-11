@@ -72,8 +72,16 @@ export function sortAnimeListResults(
       return sortDirection === "desc"
         ? compareTitles(left, right) * -1
         : compareTitles(left, right)
+    if (!left.userList.inList && !right.userList.inList) {
+      return compareTitles(left, right)
+    }
+    if (!left.userList.inList) return 1
+    if (!right.userList.inList) return -1
+    if (!left.userList.status || !right.userList.status) {
+      return compareTitles(left, right)
+    }
     const statusDelta =
-      statusOrder[left.entry.status] - statusOrder[right.entry.status]
+      statusOrder[left.userList.status] - statusOrder[right.userList.status]
     return statusDelta !== 0
       ? sortDirection === "desc"
         ? statusDelta * -1

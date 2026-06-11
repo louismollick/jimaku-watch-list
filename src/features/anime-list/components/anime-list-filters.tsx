@@ -1,19 +1,14 @@
 import { AnimeListDifficultyFilter } from "@/features/anime-list/components/anime-list-difficulty-filter"
+import { AnimeListDurationRangeFilter } from "@/features/anime-list/components/anime-list-duration-range-filter"
+import { AnimeListEpisodeRangeFilter } from "@/features/anime-list/components/anime-list-episode-range-filter"
+import { AnimeListFormatFilter } from "@/features/anime-list/components/anime-list-format-filter"
 import { AnimeListGenreFilter } from "@/features/anime-list/components/anime-list-genre-filter"
-import { AnimeListMultiFilter } from "@/features/anime-list/components/anime-list-multi-filter"
+import { AnimeListScopeFilter } from "@/features/anime-list/components/anime-list-scope-filter"
 import { AnimeListSortControls } from "@/features/anime-list/components/anime-list-sort-controls"
+import { AnimeListStatusFilters } from "@/features/anime-list/components/anime-list-status-filters"
 import { AnimeListTitleFilter } from "@/features/anime-list/components/anime-list-title-filter"
-import {
-  mediaStatuses,
-  subtitleAvailabilityOptions,
-  watchStatuses,
-} from "@/features/anime-list/domain/anime-list-enums"
-import {
-  type LookupSearchState,
-  serializeSelectedValues,
-} from "@/features/anime-list/lib/anime-list-search-state"
-import { subtitleAvailabilityLabels } from "@/features/anime-list/lib/labels"
-import { mediaStatusLabel, statusLabel } from "@/lib/status"
+import { AnimeListYearRangeFilter } from "@/features/anime-list/components/anime-list-year-range-filter"
+import type { LookupSearchState } from "@/features/anime-list/lib/anime-list-search-state"
 
 export function AnimeListFilters({
   activeDifficultyBounds,
@@ -37,58 +32,30 @@ export function AnimeListFilters({
         searchState={searchState}
         updateSearchState={updateSearchState}
       />
-      <AnimeListMultiFilter
-        ariaLabel="Japanese subtitle availability"
-        label="Japanese subtitle availability"
-        options={subtitleAvailabilityOptions.map((option) => ({
-          label: subtitleAvailabilityLabels[option],
-          value: option,
-        }))}
-        selectedValues={new Set(searchState.selectedSubtitleAvailability)}
-        updateState={(nextSelectedValues) => ({
-          selectedSubtitleAvailability: serializeSelectedValues(
-            nextSelectedValues as Set<
-              LookupSearchState["selectedSubtitleAvailability"][number]
-            >,
-            subtitleAvailabilityOptions
-          ),
-        })}
+      {searchState.source === "anilist" ? (
+        <AnimeListScopeFilter
+          searchState={searchState}
+          updateSearchState={updateSearchState}
+        />
+      ) : null}
+      <AnimeListStatusFilters
+        searchState={searchState}
         updateSearchState={updateSearchState}
       />
-      <AnimeListMultiFilter
-        ariaLabel="Watch status"
-        label="Watch status"
-        options={watchStatuses.map((status) => ({
-          label: statusLabel[status],
-          value: status,
-        }))}
-        selectedValues={new Set(searchState.selectedStatuses)}
-        updateState={(nextSelectedValues) => ({
-          selectedStatuses: serializeSelectedValues(
-            nextSelectedValues as Set<
-              LookupSearchState["selectedStatuses"][number]
-            >,
-            watchStatuses
-          ),
-        })}
+      <AnimeListFormatFilter
+        searchState={searchState}
         updateSearchState={updateSearchState}
       />
-      <AnimeListMultiFilter
-        ariaLabel="Airing status"
-        label="Airing status"
-        options={mediaStatuses.map((status) => ({
-          label: mediaStatusLabel[status],
-          value: status,
-        }))}
-        selectedValues={new Set(searchState.selectedMediaStatuses)}
-        updateState={(nextSelectedValues) => ({
-          selectedMediaStatuses: serializeSelectedValues(
-            nextSelectedValues as Set<
-              LookupSearchState["selectedMediaStatuses"][number]
-            >,
-            mediaStatuses
-          ),
-        })}
+      <AnimeListYearRangeFilter
+        searchState={searchState}
+        updateSearchState={updateSearchState}
+      />
+      <AnimeListEpisodeRangeFilter
+        searchState={searchState}
+        updateSearchState={updateSearchState}
+      />
+      <AnimeListDurationRangeFilter
+        searchState={searchState}
         updateSearchState={updateSearchState}
       />
       {availableGenres.length > 0 ? (

@@ -1,7 +1,9 @@
 import {
+  animeFormats,
   animeSources,
   difficultyFilterModes,
   mediaStatuses,
+  myAnimeFilterModes,
   sortDirections,
   sortOptions,
   subtitleAvailabilityOptions,
@@ -85,6 +87,11 @@ export function validateLookupSearch(
       defaultLookupSearchState.source
     ),
     username: typeof search.username === "string" ? search.username : "",
+    myAnimeFilterMode: toEnum(
+      search.myAnimeFilterMode,
+      myAnimeFilterModes,
+      defaultLookupSearchState.myAnimeFilterMode
+    ),
     titleQuery: typeof search.titleQuery === "string" ? search.titleQuery : "",
     selectedStatuses: sanitizeEnumArray(
       search.selectedStatuses,
@@ -96,12 +103,20 @@ export function validateLookupSearch(
       mediaStatuses,
       defaultLookupSearchState.selectedMediaStatuses
     ),
+    selectedFormats: sanitizeEnumArray(
+      search.selectedFormats,
+      animeFormats,
+      defaultLookupSearchState.selectedFormats
+    ),
     selectedGenres: toStringArray(search.selectedGenres),
     selectedSubtitleAvailability: sanitizeEnumArray(
       search.selectedSubtitleAvailability,
       subtitleAvailabilityOptions,
       defaultLookupSearchState.selectedSubtitleAvailability
     ),
+    yearRange: toNumberRange(search.yearRange),
+    episodeRange: toNumberRange(search.episodeRange),
+    durationRange: toNumberRange(search.durationRange),
     difficultyFilterMode: toEnum(
       search.difficultyFilterMode,
       difficultyFilterModes,

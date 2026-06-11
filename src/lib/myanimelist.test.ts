@@ -2,14 +2,17 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 const {
   fetchAniListIdsForMyAnimeListIdsMock,
+  fetchAniListMetadataForAniListIdsMock,
   fetchReleasedEpisodesForAniListIdsMock,
 } = vi.hoisted(() => ({
   fetchAniListIdsForMyAnimeListIdsMock: vi.fn(),
+  fetchAniListMetadataForAniListIdsMock: vi.fn(),
   fetchReleasedEpisodesForAniListIdsMock: vi.fn(),
 }))
 
 vi.mock("@/lib/anilist-id-map", () => ({
   fetchAniListIdsForMyAnimeListIds: fetchAniListIdsForMyAnimeListIdsMock,
+  fetchAniListMetadataForAniListIds: fetchAniListMetadataForAniListIdsMock,
   fetchReleasedEpisodesForAniListIds: fetchReleasedEpisodesForAniListIdsMock,
 }))
 
@@ -21,6 +24,7 @@ const originalClientId = process.env.MYANIMELIST_CLIENT_ID
 afterEach(() => {
   global.fetch = originalFetch
   fetchAniListIdsForMyAnimeListIdsMock.mockReset()
+  fetchAniListMetadataForAniListIdsMock.mockReset()
   fetchReleasedEpisodesForAniListIdsMock.mockReset()
 
   if (originalClientId === undefined) {
@@ -45,6 +49,12 @@ describe("fetchMyAnimeListEntries", () => {
       new Map([
         [201, 8],
         [202, 25],
+      ])
+    )
+    fetchAniListMetadataForAniListIdsMock.mockResolvedValue(
+      new Map([
+        [201, { year: 2024, duration: 24, format: "TV" }],
+        [202, { year: 2024, duration: 25, format: "MOVIE" }],
       ])
     )
 
@@ -135,6 +145,8 @@ describe("fetchMyAnimeListEntries", () => {
     expect(Array.isArray(result) ? result[0].media.popularity : null).toBe(
       500000
     )
+    expect(Array.isArray(result) ? result[0].media.year : null).toBe(2024)
+    expect(Array.isArray(result) ? result[0].media.duration : null).toBe(24)
     expect(
       Array.isArray(result) ? result[0].media.releasedEpisodes : null
     ).toBe(8)

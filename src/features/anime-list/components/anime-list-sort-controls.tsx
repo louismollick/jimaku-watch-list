@@ -26,6 +26,11 @@ export function AnimeListSortControls({
     updater: (previousState: LookupSearchState) => LookupSearchState
   ) => void
 }) {
+  const availableSortOptions = Object.entries(sortOptionLabels).filter(
+    ([value]) =>
+      !(searchState.myAnimeFilterMode === "hideMine" && value === "status")
+  )
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
@@ -69,7 +74,7 @@ export function AnimeListSortControls({
           className="w-[var(--radix-select-trigger-width)]"
           position="popper"
         >
-          {Object.entries(sortOptionLabels).map(([value, label]) => (
+          {availableSortOptions.map(([value, label]) => (
             <SelectItem key={value} value={value}>
               {label}
             </SelectItem>

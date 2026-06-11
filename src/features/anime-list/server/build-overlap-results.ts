@@ -42,8 +42,15 @@ export function getAnimeListCompleteness(
 
 export function sortAnimeListOverlapResults(results: OverlapResult[]) {
   return [...results].sort((left, right) => {
-    const statusDelta =
-      statusOrder[left.entry.status] - statusOrder[right.entry.status]
+    const leftStatusOrder =
+      left.userList.status === null
+        ? Number.MAX_SAFE_INTEGER
+        : statusOrder[left.userList.status]
+    const rightStatusOrder =
+      right.userList.status === null
+        ? Number.MAX_SAFE_INTEGER
+        : statusOrder[right.userList.status]
+    const statusDelta = leftStatusOrder - rightStatusOrder
 
     if (statusDelta !== 0) {
       return statusDelta
@@ -76,6 +83,12 @@ export function buildAnimeListOverlapResults(
 
     return {
       entry,
+      userList: {
+        inList: entry.status !== null,
+        status: entry.status,
+        score: entry.score,
+        progress: entry.progress,
+      },
       matchedJimaku: matched?.matchedJimaku ?? null,
       alternates: matched?.alternates ?? [],
       matchScore: matched?.matchScore ?? null,
